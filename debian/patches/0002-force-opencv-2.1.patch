@@ -1,0 +1,22 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Tue, 25 Oct 2011 17:54:45 +0100
+Subject: force opencv 2.1
+
+---
+ MLDemos_variables.pri |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/MLDemos_variables.pri b/MLDemos_variables.pri
+index 2e8bbb3..f7c9ff6 100644
+--- a/MLDemos_variables.pri
++++ b/MLDemos_variables.pri
+@@ -14,7 +14,7 @@ win32{
+ }
+ 
+ # choices are opencv22 or opencv21
+-CONFIG += opencv22
++CONFIG += opencv21
+ 
+ CONFIG(opencv22)|CONFIG(opencv21){
+ 	message("You have selected to use the OpenCV library, if you do not have/desire it, please modify MLDemos_variables.pri")
+-- 

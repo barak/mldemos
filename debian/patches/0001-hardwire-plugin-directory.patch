@@ -1,6 +1,6 @@
-From: Barak A. Pearlmutter <barak+git@cs.nuim.ie>
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
 Date: Mon, 30 May 2011 20:21:12 +0100
-Subject: [PATCH] hardwire plugin directory
+Subject: hardwire plugin directory
 
 Set directory to scan for plugins subdirectory containing plugins to
 system directory in which the plugins subdirectory is installed.
@@ -9,10 +9,10 @@ system directory in which the plugins subdirectory is installed.
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/MLDemos/mldemos.cpp b/MLDemos/mldemos.cpp
-index 251f72e..8510343 100644
+index 6692935..bad3c38 100644
 --- a/MLDemos/mldemos.cpp
 +++ b/MLDemos/mldemos.cpp
-@@ -429,7 +429,7 @@ void MLDemos::initDialogs()
+@@ -424,7 +424,7 @@ void MLDemos::initDialogs()
  void MLDemos::initPlugins()
  {
      qDebug() << "Importing plugins";

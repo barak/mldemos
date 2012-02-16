@@ -16,8 +16,8 @@ RESOURCES += mldemos.qrc
 CONFIG += mainApp
 include($$MLPATH/MLDemos_variables.pri)
 
-CONFIG += boost
-INCLUDEPATH += $$BOOST
+#CONFIG += boost
+#INCLUDEPATH += $$BOOST
 
 macx:INCLUDEPATH += uiMac
 
@@ -43,7 +43,8 @@ FORMS += aboutDialog.ui \
 	viewOptions.ui \
     compare.ui \
     expose.ui \
-    manualSelection.ui
+    manualSelection.ui \
+    inputDimensions.ui
 
 HEADERS += basicMath.h \
     canvas.h \

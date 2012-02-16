@@ -133,11 +133,17 @@ QPixmap RocImage(std::vector< std::vector<f32pair> > rocdata, std::vector<const 
     QPainter painter(&pixmap);
 	painter.setRenderHint(QPainter::Antialiasing);
 
+    int w = pixmap.width(), h = pixmap.height();
 	int PAD = 16;
+
+    QFont font = painter.font();
+    font.setPointSize(12);
+    font.setBold(true);
+    painter.setFont(font);
 
 	FOR(d, rocdata.size())
 	{
-		int minCol = 70;
+        int minCol = 128;
 		int color = (rocdata.size() == 1) ? 255 : (255 - minCol)*(rocdata.size() - d -1)/(rocdata.size()-1) + minCol;
 		color = 255 - color;
 
@@ -201,6 +207,18 @@ QPixmap RocImage(std::vector< std::vector<f32pair> > rocdata, std::vector<const 
             painter.drawText(pos,QString(roclabels[d]));
 		}
 	}
+
+    font = painter.font();
+    font.setPointSize(10);
+    font.setBold(false);
+    font.setCapitalization(QFont::SmallCaps);
+    painter.setFont(font);
+    painter.setPen(Qt::black);
+    painter.drawText(0, 0, size.width(), 16, Qt::AlignCenter, "False Positives");
+    painter.translate(0, size.height());
+    painter.rotate(-90);
+    painter.drawText(0,0, size.height(), 16, Qt::AlignCenter, "True Positives");
+
 	return pixmap;
 }
 
@@ -239,12 +257,14 @@ QPixmap BoxPlot(std::vector<fvec> allData, QSize size, float maxVal, float minVa
 		int hpad = 15 + (d*size.width()/(allData.size()));
 		int pad = -16;
 		int res = size.height()+2*pad;
+        int nanCount = 0;
+        FOR(i, data.size()) if(data[i] != data[i]) nanCount++;
 
 		float mean = 0;
 		float sigma = 0;
-		FOR(i, data.size()) mean += data[i] / data.size();
-		FOR(i, data.size()) sigma += powf(data[i]-mean,2);
-		sigma = sqrtf(sigma/data.size());
+        FOR(i, data.size()) if(data[i]==data[i]) mean += data[i] / (data.size()-nanCount);
+        FOR(i, data.size()) if(data[i]==data[i]) sigma += powf(data[i]-mean,2);
+        sigma = sqrtf(sigma/(data.size()-nanCount));
 
 		float edge = minVal;
 		float delta = maxVal - minVal;
@@ -264,6 +284,7 @@ QPixmap BoxPlot(std::vector<fvec> allData, QSize size, float maxVal, float minVa
 				// we look for outliers using the 3*sigma rule
 				FOR(i, data.size())
 				{
+                    if(data[i]!=data[i]) continue;
 					if (data[i] - mean < 3*sigma)
 						sorted.push_back(data[i]);
 					else outliers.push_back(data[i]);
@@ -317,7 +338,7 @@ QPixmap BoxPlot(std::vector<fvec> allData, QSize size, float maxVal, float minVa
 
 		const char *longFormat = "%.3f";
 		const char *shortFormat = "%.0f";
-		const char *format = (maxVal - minVal) > 10 ? shortFormat : longFormat;
+        const char *format = (maxVal - minVal) > 100 ? shortFormat : longFormat;
 		painter.setPen(Qt::black);
 		char text[255];
 		sprintf(text, format, median);
@@ -346,8 +367,8 @@ QPixmap Histogram(std::vector<fvec> allData, QSize size, float maxVal, float min
 	{
 		fvec data = allData[d];
 		if(!data.size()) continue;
-		FOR(i, data.size()) maxVal = max(maxVal, data[i]);
-		FOR(i, data.size()) minVal = min(minVal, data[i]);
+        FOR(i, data.size()) if(data[i]==data[i]) maxVal = max(maxVal, data[i]);
+        FOR(i, data.size()) if(data[i]==data[i]) minVal = min(minVal, data[i]);
 	}
 	if(minVal == maxVal)
 	{
@@ -366,11 +387,13 @@ QPixmap Histogram(std::vector<fvec> allData, QSize size, float maxVal, float min
 		int pad = -16;
 		int res = size.height()+2*pad;
 
+        int nanCount = 0;
+        FOR(i, data.size()) if(data[i] != data[i]) nanCount++;
 		float mean = 0;
 		float sigma = 0;
-		FOR(i, data.size()) mean += data[i] / data.size();
-		FOR(i, data.size()) sigma += powf(data[i]-mean,2);
-		sigma = sqrtf(sigma/data.size());
+        FOR(i, data.size()) if(data[i]==data[i]) mean += data[i] / (data.size()-nanCount);
+        FOR(i, data.size()) if(data[i]==data[i]) sigma += powf(data[i]-mean,2);
+        sigma = sqrtf(sigma/(data.size()-nanCount));
 
 		float edge = minVal;
 		float delta = maxVal - minVal;
@@ -424,14 +447,14 @@ QPixmap RawData(std::vector<fvec> allData, QSize size, float maxVal, float minVa
     rawData.fill(Qt::transparent);
     QPainter painter(&rawData);
 
-    //	painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::Antialiasing);
 
     FOR(d,allData.size())
     {
         fvec data = allData[d];
         if(!data.size()) continue;
-        FOR(i, data.size()) maxVal = max(maxVal, data[i]);
-        FOR(i, data.size()) minVal = min(minVal, data[i]);
+        FOR(i, data.size()) if(data[i]==data[i]) maxVal = max(maxVal, data[i]);
+        FOR(i, data.size()) if(data[i]==data[i]) minVal = min(minVal, data[i]);
     }
     if(minVal == maxVal)
     {
@@ -450,24 +473,29 @@ QPixmap RawData(std::vector<fvec> allData, QSize size, float maxVal, float minVa
         int hsize = (size.width()/allData.size() - 15);
         int pad = -16;
         int res = size.height()+2*pad;
+        int nanCount = 0;
+        FOR(i, data.size()) if(data[i] != data[i]) nanCount++;
 
         float mean = 0;
         float sigma = 0;
-        FOR(i, data.size()) mean += data[i] / data.size();
-        FOR(i, data.size()) sigma += powf(data[i]-mean,2);
-        sigma = sqrtf(sigma/data.size());
+        FOR(i, data.size()) if(data[i]==data[i]) mean += data[i] / (data.size()-nanCount);
+        FOR(i, data.size()) if(data[i]==data[i]) sigma += powf(data[i]-mean,2);
+        sigma = sqrtf(sigma/(data.size()-nanCount));
 
         float edge = minVal;
         float delta = maxVal - minVal;
 
+        QPointF topPoint = QPointF(0, size.height() - (int)((mean-edge)/delta*res) + pad);
+        QPointF plusPoint = QPointF(0, size.height() - (int)((mean+sigma-edge)/delta*res) + pad);
+        QPointF minusPoint = QPointF(0, size.height() - (int)((mean-sigma-edge)/delta*res) + pad);
+
         FOR(i, data.size())
         {
-            QPointF point = QPointF(hpad + (drand48() - 0.5)*hsize, size.height() - (int)((data[i]-edge)/delta*res) + pad);
+            QPointF point = QPointF(hpad + (drand48() - 0.5)*hsize/2 + hsize/2, size.height() - (int)((data[i]-edge)/delta*res) + pad);
             painter.setPen(QPen(Qt::black, 0.5));
             painter.setBrush(QColor(color,color,color));
             painter.drawEllipse(point, 5, 5);
         }
-        /*
         const char *longFormat = "%.3f";
         const char *shortFormat = "%.0f";
         const char *format = (maxVal - minVal) > 10 ? shortFormat : longFormat;
@@ -476,10 +504,9 @@ QPixmap RawData(std::vector<fvec> allData, QSize size, float maxVal, float minVa
         sprintf(text, format, mean);
         painter.drawText(QPointF(hpad-8,topPoint.y()+6), QString(text));
         sprintf(text, format, mean+sigma);
-        painter.drawText(QPointF(hpad+36,plusPoint.y()-6), QString(text));
+        painter.drawText(QPointF(hpad-8,plusPoint.y()-6), QString(text));
         sprintf(text, format, mean-sigma);
-        painter.drawText(QPointF(hpad+36,minusPoint.y()+12), QString(text));
-        */
+        painter.drawText(QPointF(hpad-8,minusPoint.y()+12), QString(text));
     }
     return rawData;
 }

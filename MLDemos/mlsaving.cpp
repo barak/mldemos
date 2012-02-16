@@ -119,7 +119,6 @@ void MLDemos::SaveLayoutOptions()
 	settings.endGroup();
 
 	settings.beginGroup("compareOptions");
-	settings.setValue("positiveClass", optionsCompare->positiveSpin->value());
 	settings.setValue("foldCount", optionsCompare->foldCountSpin->value());
 	settings.setValue("trainRatio", optionsCompare->traintestRatioCombo->currentIndex());
 	settings.endGroup();
@@ -273,8 +272,8 @@ void MLDemos::LoadLayoutOptions()
 
 	settings.beginGroup("regressionOptions");
 	if(settings.contains("foldCount")) optionsRegress->foldCountSpin->setValue(settings.value("foldCount").toFloat());
-	if(settings.contains("trainRatio")) optionsRegress->traintestRatioCombo->setCurrentIndex(settings.value("trainRatio").toInt());
-	if(settings.contains("tab")) optionsRegress->tabWidget->setCurrentIndex(settings.value("tab").toInt());
+    if(settings.contains("trainRatio")) optionsRegress->traintestRatioCombo->setCurrentIndex(settings.value("trainRatio").toInt());
+    if(settings.contains("tab")) optionsRegress->tabWidget->setCurrentIndex(settings.value("tab").toInt());
 	settings.endGroup();
 
 	settings.beginGroup("dynamicalOptions");
@@ -289,7 +288,6 @@ void MLDemos::LoadLayoutOptions()
 	settings.endGroup();
 
 	settings.beginGroup("compareOptions");
-	if(settings.contains("positiveClass")) optionsCompare->positiveSpin->setValue(settings.value("positiveClass").toFloat());
 	if(settings.contains("foldCount")) optionsCompare->foldCountSpin->setValue(settings.value("foldCount").toFloat());
 	if(settings.contains("trainRatio")) optionsCompare->traintestRatioCombo->setCurrentIndex(settings.value("trainRatio").toInt());
 	settings.endGroup();
@@ -373,6 +371,20 @@ void MLDemos::SaveParams( QString filename )
 	if(!canvas->data->GetCount()) out << "0 2\n";
 	char groupName[255];
 
+    if(canvas->dimNames.size())
+    {
+        out << "headers" << " " << canvas->dimNames.size();
+        FOR(i, canvas->dimNames.size())
+        {
+            QString header = canvas->dimNames.at(i);
+            // we take out all spaces as they're really not nice for parsing the headers afterwards
+            header.replace("\n", "_");
+            header.replace(" ", "_");
+            header.replace("\t", "_");
+            out << " " << header;
+        }
+        out << "\n";
+    }
 	if(classifier)
 	{
 		int tab = optionsClassify->tabWidget->currentIndex();
@@ -388,8 +400,9 @@ void MLDemos::SaveParams( QString filename )
 	{
 		int tab = optionsRegress->tabWidget->currentIndex();
 		sprintf(groupName,"regressionOptions");
-		out << groupName << ":" << "tab" << " " << optionsRegress->tabWidget->currentIndex() << "\n";
-		if(tab < regressors.size() && regressors[tab])
+        out << groupName << ":" << "tab" << " " << optionsRegress->tabWidget->currentIndex() << "\n";
+        out << groupName << ":" << "outputDimCombo" << " " << optionsRegress->outputDimCombo->currentIndex() << "\n";
+        if(tab < regressors.size() && regressors[tab])
 		{
 			regressors[tab]->SaveParams(out);
 		}
@@ -496,9 +509,22 @@ void MLDemos::LoadParams( QString filename )
 	while(!in.atEnd())
 	{
 		in >> line;
-		in >> value;
-//		qDebug() << line << " " << value << endl;
-		if(line.startsWith(classGroup))
+        in >> value;
+        //		qDebug() << line << " " << value << endl;
+        if(line.startsWith("headers"))
+        {
+            int headerCount = value;
+            canvas->dimNames.clear();
+            FOR(i, headerCount)
+            {
+                QString header;
+                in >> header;
+                canvas->dimNames << header;
+            }
+            //qDebug() << "dimensions: " << dimensionNames;
+            canvas->dimNames;
+        }
+        if(line.startsWith(classGroup))
 		{
 			bClass = true;
 			algorithmOptions->tabWidget->setCurrentWidget(algorithmOptions->tabClass);
@@ -510,8 +536,9 @@ void MLDemos::LoadParams( QString filename )
 		{
 			bRegr = true;
 			algorithmOptions->tabWidget->setCurrentWidget(algorithmOptions->tabRegr);
-			if(line.endsWith("tab")) optionsRegress->tabWidget->setCurrentIndex(tab = (int)value);
-			if(tab < regressors.size() && regressors[tab]) regressors[tab]->LoadParams(line,value);
+            if(line.endsWith("tab")) optionsRegress->tabWidget->setCurrentIndex(tab = (int)value);
+            if(line.endsWith("outputDimCombo")) optionsRegress->outputDimCombo->setCurrentIndex((int)value);
+            if(tab < regressors.size() && regressors[tab]) regressors[tab]->LoadParams(line,value);
 		}
 		if(line.startsWith(dynGroup))
 		{
@@ -555,9 +582,10 @@ void MLDemos::LoadParams( QString filename )
             if(tab < projectors.size() && projectors[tab]) projectors[tab]->LoadParams(line,value);
         }
 	}
-	ResetPositiveClass();
+    ResetPositiveClass();
     ManualSelectionUpdated();
-	if(bClass) Classify();
+    InputDimensionsUpdated();
+    if(bClass) Classify();
 	if(bRegr) Regression();
 	if(bDyn) Dynamize();
 	if(bClust) Cluster();

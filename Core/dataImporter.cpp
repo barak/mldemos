@@ -17,26 +17,25 @@ License along with this library; if not, write to the Free
 Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 *********************************************************************/
 
-#include "CSVImport.h"
+#include "dataImporter.h"
+#include "ui_dataImport.h"
 
-Q_EXPORT_PLUGIN2(IO_CSVImport, CSVImport)
-
-CSVImport::CSVImport()
+DataImporter::DataImporter()
     : guiDialog(0), gui(0), inputParser(0)
 {
 }
 
-CSVImport::~CSVImport()
+DataImporter::~DataImporter()
 {
     if(gui && guiDialog) guiDialog->hide();
     DEL(inputParser);
 }
 
-void CSVImport::Start()
+void DataImporter::Start()
 {
     if(!gui)
     {
-        gui = new Ui::CSVImportDialog();
+        gui = new Ui::DataImporterDialog();
         gui->setupUi(guiDialog = new QDialog());
         guiDialog->setWindowTitle("CVS Import");
         connect(gui->closeButton, SIGNAL(clicked()), this, SLOT(Closing()));
@@ -44,26 +43,26 @@ void CSVImport::Start()
         connect(gui->classColumnSpin, SIGNAL(valueChanged(int)), this, SLOT(classColumnChanged(int)));
         connect(gui->headerCheck, SIGNAL(clicked()), this, SLOT(headerChanged()));
         connect(gui->loadFile, SIGNAL(clicked()), this, SLOT(LoadFile())); // file loader
-        connect(gui->dumpButton, SIGNAL(clicked()),this,SLOT(on_dumpButton_clicked()));
+        connect(gui->dumpButton, SIGNAL(clicked()),this,SLOT(SendData()));
         connect(gui->classIgnoreCheck, SIGNAL(clicked()), this, SLOT(classIgnoreChanged()));
-//        connect(gui->pcaButton, SIGNAL(clicked()),this,SLOT(on_pcaButton_clicked()));
         guiDialog->show();
     }
     else guiDialog->show();
     if(!inputParser) inputParser = new CSVParser();
 }
 
-void CSVImport::Stop()
+void DataImporter::Stop()
 {
     guiDialog->hide();
 }
 
-void CSVImport::Closing()
+void DataImporter::Closing()
 {
+    guiDialog->hide();
     emit(Done(this));
 }
 
-bool CSVImport::saveFile(const QString &filename, QIODevice *data)
+bool DataImporter::saveFile(const QString &filename, QIODevice *data)
 {
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -77,21 +76,20 @@ bool CSVImport::saveFile(const QString &filename, QIODevice *data)
     return true;
 }
 
-void CSVImport::LoadFile()
+void DataImporter::LoadFile()
 {
 	QString filename = QFileDialog::getOpenFileName(NULL, tr("Load Data"), QDir::currentPath(), tr("dataset files (*.data *.csv);;All files (*.*)"));
     if(filename.isEmpty()) return;
     Parse(filename);
-    gui->tabWidget->setCurrentIndex(0);
 }
 
-void CSVImport::Parse(QString filename)
+void DataImporter::Parse(QString filename)
 {
     if(filename.isEmpty()) return;
+    headers.clear();
     inputParser->clear();
     inputParser->parse(filename.toStdString().c_str());
     vector<vector<string> > rawData = inputParser->getRawData();
-    qDebug() << "Dataset extracted";
     if(rawData.size() < 2) return;
     bool bUseHeader = gui->headerCheck->isChecked();
 
@@ -103,6 +101,7 @@ void CSVImport::Parse(QString filename)
         QStringList headerLabels;
         FOR(i, rawData[0].size())
         {
+            headers << rawData[0][i].c_str();
             headerLabels <<  QString("%1:").arg(i+1) + rawData[0][i].c_str();
         }
         gui->tableWidget->setHorizontalHeaderLabels(headerLabels);
@@ -119,20 +118,20 @@ void CSVImport::Parse(QString filename)
     gui->classColumnSpin->setRange(1,rawData[0].size());
 }
 
-void CSVImport::FetchResults(std::vector<fvec> results)
+void DataImporter::FetchResults(std::vector<fvec> results)
 {
 
 }
 
-void CSVImport::classIgnoreChanged()
+void DataImporter::classIgnoreChanged()
 {
     classColumnChanged(0);
 }
 
-void CSVImport::headerChanged()
+void DataImporter::headerChanged()
 {
+    headers.clear();
     vector<vector<string> > rawData = inputParser->getRawData();
-    qDebug() << "Dataset extracted";
     if(rawData.size() < 2) return;
     bool bUseHeader = gui->headerCheck->isChecked();
 
@@ -144,7 +143,8 @@ void CSVImport::headerChanged()
         QStringList headerLabels;
         FOR(i, rawData[0].size())
         {
-            headerLabels <<  QString("%1:").arg(i) + rawData[0][i].c_str();
+            headers << rawData[0][i].c_str();
+            headerLabels <<  QString("%1:").arg(i+1) + rawData[0][i].c_str();
         }
         gui->tableWidget->setHorizontalHeaderLabels(headerLabels);
     }
@@ -160,7 +160,7 @@ void CSVImport::headerChanged()
     gui->classColumnSpin->setRange(1,rawData[0].size());
 }
 
-void CSVImport::classColumnChanged(int value)
+void DataImporter::classColumnChanged(int value)
 {
     if(gui->classIgnoreCheck->isChecked())
     {
@@ -169,7 +169,7 @@ void CSVImport::classColumnChanged(int value)
     else  inputParser->setOutputColumn(value-1);
 }
 
-void CSVImport::on_dumpButton_clicked()
+void DataImporter::SendData()
 {
     ivec excludeIndices;
     vector<bool> bExcluded(gui->tableWidget->columnCount(), false);
@@ -186,4 +186,5 @@ void CSVImport::on_dumpButton_clicked()
     inputParser->setFirstRowAsHeader(gui->headerCheck->isChecked());
 	pair<vector<fvec>,ivec> data = inputParser->getData(excludeIndices, 1000);
     emit(SetData(data.first, data.second, vector<ipair>(), false));
+    emit(SetDimensionNames(headers));
 }

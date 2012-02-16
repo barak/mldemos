@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CSVImportDialog</class>
- <widget class="QDialog" name="CSVImportDialog">
+ <class>DataImporterDialog</class>
+ <widget class="QDialog" name="DataImporterDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -168,19 +168,19 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>Ctrl + Click to select multiple columns. Selected columns will be excluded from the input</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QTableWidget" name="tableWidget">
          <property name="editTriggers">
           <set>QAbstractItemView::NoEditTriggers</set>
          </property>
          <property name="selectionBehavior">
           <enum>QAbstractItemView::SelectColumns</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Ctrl + Click to select multiple columns. Selected columns will be excluded from the input</string>
          </property>
         </widget>
        </item>

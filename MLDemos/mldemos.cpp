@@ -62,6 +62,7 @@ MLDemos::MLDemos(QString filename, QWidget *parent, Qt::WFlags flags)
     connect(ui.actionNew, SIGNAL(triggered()), this, SLOT(ClearData()));
     connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(SaveData()));
     connect(ui.actionLoad, SIGNAL(triggered()), this, SLOT(LoadData()));
+    connect(ui.actionImportData, SIGNAL(triggered()), this, SLOT(ImportData()));
     connect(ui.actionExportOutput, SIGNAL(triggered()), this, SLOT(ExportOutput()));
     connect(ui.actionExportAnimation, SIGNAL(triggered()), this, SLOT(ExportAnimation()));
     connect(ui.actionExport_SVG, SIGNAL(triggered()), this, SLOT(ExportSVG()));
@@ -260,11 +261,13 @@ void MLDemos::initDialogs()
     aboutPanel = new Ui::aboutDialog();
     showStats = new Ui::statisticsDialog();
     manualSelection = new Ui::ManualSelection();
+    inputDimensions = new Ui::InputDimensions();
 
     displayOptions->setupUi(displayDialog = new QDialog());
     aboutPanel->setupUi(about = new QDialog());
     showStats->setupUi(statsDialog = new QDialog());
     manualSelection->setupUi(manualSelectDialog = new QDialog());
+    inputDimensions->setupUi(inputDimensionsDialog = new QDialog());
     rocWidget = new QNamedWindow("ROC Curve", false, showStats->rocWidget);
     infoWidget = new QNamedWindow("Info", false, showStats->informationWidget);
 
@@ -272,11 +275,16 @@ void MLDemos::initDialogs()
     connect(showStats->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(StatsChanged()));
     connect(rocWidget, SIGNAL(ResizeEvent(QResizeEvent *)), this, SLOT(StatsChanged()));
     connect(infoWidget, SIGNAL(ResizeEvent(QResizeEvent *)), this, SLOT(StatsChanged()));
-    connect(manualSelection->sampleList, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)), this, SLOT(ManualSelectionChanged()));
+    connect(manualSelection->sampleList, SIGNAL(itemSelectionChanged()), this, SLOT(ManualSelectionChanged()));
     connect(manualSelection->clearSelectionButton, SIGNAL(clicked()), this, SLOT(ManualSelectionClear()));
     connect(manualSelection->invertSelectionButton, SIGNAL(clicked()), this, SLOT(ManualSelectionInvert()));
     connect(manualSelection->removeSampleButton, SIGNAL(clicked()), this, SLOT(ManualSelectionRemove()));
     connect(manualSelection->randomizeSelectionButton, SIGNAL(clicked()), this, SLOT(ManualSelectionRandom()));
+    connect(inputDimensions->dimList, SIGNAL(itemSelectionChanged()), this, SLOT(InputDimensionsChanged()));
+    connect(inputDimensions->clearSelectionButton, SIGNAL(clicked()), this, SLOT(InputDimensionsClear()));
+    connect(inputDimensions->invertSelectionButton, SIGNAL(clicked()), this, SLOT(InputDimensionsInvert()));
+    connect(inputDimensions->randomizeSelectionButton, SIGNAL(clicked()), this, SLOT(InputDimensionsRandom()));
+
 
     connect(drawToolbar->singleButton, SIGNAL(clicked()), this, SLOT(DrawSingle()));
     connect(drawToolbar->sprayButton, SIGNAL(clicked()), this, SLOT(DrawSpray()));
@@ -344,6 +352,7 @@ void MLDemos::initDialogs()
     connect(optionsClassify->crossValidButton, SIGNAL(clicked()), this, SLOT(ClassifyCross()));
     connect(optionsClassify->compareButton, SIGNAL(clicked()), this, SLOT(CompareAdd()));
     connect(optionsClassify->manualTrainButton, SIGNAL(clicked()), this, SLOT(ManualSelection()));
+    connect(optionsClassify->inputDimButton, SIGNAL(clicked()), this, SLOT(InputDimensions()));
 
     connect(optionsRegress->regressionButton, SIGNAL(clicked()), this, SLOT(Regression()));
     connect(optionsRegress->crossValidButton, SIGNAL(clicked()), this, SLOT(RegressionCross()));
@@ -351,6 +360,7 @@ void MLDemos::initDialogs()
     //connect(optionsRegress->svmTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(ChangeActiveOptions()));
     connect(optionsRegress->compareButton, SIGNAL(clicked()), this, SLOT(CompareAdd()));
     connect(optionsRegress->manualTrainButton, SIGNAL(clicked()), this, SLOT(ManualSelection()));
+    connect(optionsRegress->inputDimButton, SIGNAL(clicked()), this, SLOT(InputDimensions()));
 
     connect(optionsCluster->clusterButton, SIGNAL(clicked()), this, SLOT(Cluster()));
     connect(optionsCluster->iterationButton, SIGNAL(clicked()), this, SLOT(ClusterIterate()));
@@ -388,6 +398,10 @@ void MLDemos::initDialogs()
 	connect(optionsCompare->screenshotButton, SIGNAL(clicked()), this, SLOT(CompareScreenshot()));
 	connect(optionsCompare->clearButton, SIGNAL(clicked()), this, SLOT(CompareClear()));
 	connect(optionsCompare->removeButton, SIGNAL(clicked()), this, SLOT(CompareRemove()));
+    connect(optionsCompare->inputDimButton, SIGNAL(clicked()), this, SLOT(InputDimensions()));
+
+    connect(optionsRegress->outputDimCombo, SIGNAL(currentIndexChanged(int)), optionsCompare->outputDimCombo, SLOT(setCurrentIndex(int)));
+    connect(optionsCompare->outputDimCombo, SIGNAL(currentIndexChanged(int)), optionsRegress->outputDimCombo, SLOT(setCurrentIndex(int)));
 
     optionsClassify->tabWidget->clear();
     optionsCluster->tabWidget->clear();
@@ -432,6 +446,10 @@ void MLDemos::initDialogs()
     connect(drawTimer, SIGNAL(CurveReady()), this, SLOT(SetROCInfo()));
 
     expose = new Expose(canvas);
+    import = new DataImporter();
+    connect(import, import->SetDataSignal(), this, SLOT(SetData(std::vector<fvec>, ivec, std::vector<ipair>, bool)));
+    connect(import, import->SetTimeseriesSignal(), this, SLOT(SetTimeseries(std::vector<TimeSerie>)));
+    connect(import, SIGNAL(SetDimensionNames(QStringList)), this, SLOT(SetDimensionNames(QStringList)));
 }
 
 void MLDemos::initPlugins()
@@ -939,6 +957,11 @@ void MLDemos::ManualSelection()
     manualSelectDialog->show();
 }
 
+void MLDemos::InputDimensions()
+{
+    inputDimensionsDialog->show();
+}
+
 void MLDemos::HideSampleDrawing()
 {
     drawToolbarWidget->hide();
@@ -1001,17 +1024,37 @@ void MLDemos::ResetPositiveClass()
             if(labels[i] < labMin) labMin = labels[i];
         }
     }
+    int dimCount = max(2,canvas->data->GetDimCount());
+    int currentOutputDim = optionsCompare->outputDimCombo->currentIndex();
+
+    optionsCompare->outputDimCombo->clear();
+    optionsRegress->outputDimCombo->clear();
+    FOR(i, dimCount)
+    {
+        if(i < canvas->dimNames.size())
+        {
+            optionsCompare->outputDimCombo->addItem(QString("%1) %2").arg(i+1).arg(canvas->dimNames.at(i)));
+            optionsRegress->outputDimCombo->addItem(QString("%1) %2").arg(i+1).arg(canvas->dimNames.at(i)));
+        }
+        else
+        {
+            optionsCompare->outputDimCombo->addItem(QString("%1").arg(i+1));
+            optionsRegress->outputDimCombo->addItem(QString("%1").arg(i+1));
+        }
+    }
+    if(currentOutputDim < dimCount) optionsCompare->outputDimCombo->setCurrentIndex(currentOutputDim);
+
     optionsClassify->positiveSpin->setRange(labMin,labMax);
     if(optionsClassify->positiveSpin->value() < labMin)
         optionsClassify->positiveSpin->setValue(labMin);
     else if(optionsClassify->positiveSpin->value() > labMax)
         optionsClassify->positiveSpin->setValue(labMax);
-	int dimCount = max(2,canvas->data->GetDimCount());
     ui.canvasX1Spin->setRange(1,dimCount);
     ui.canvasX2Spin->setRange(1,dimCount);
     ui.canvasX3Spin->setRange(0,dimCount);
     canvas->SetDim(ui.canvasX1Spin->value()-1,ui.canvasX2Spin->value()-1, ui.canvasX3Spin->value()-1);
     ManualSelectionUpdated();
+    InputDimensionsUpdated();
 }
 
 void MLDemos::ChangeActiveOptions()
@@ -1024,9 +1067,9 @@ void MLDemos::ClearData()
     sourceData.clear();
     sourceLabels.clear();
     projectedData.clear();
-    dimensionNames.clear();
     if(canvas)
     {
+        canvas->dimNames.clear();
         canvas->sampleColors.clear();
         canvas->data->Clear();
         canvas->targets.clear();
@@ -1336,7 +1379,7 @@ void MLDemos::ManualSelectionUpdated()
     manualSelection->sampleList->clear();
     FOR(i, samples.size())
     {
-        QString item = QString("%1: (%2)").arg(i).arg(labels[i]);
+        QString item = QString("%1: (%2)").arg(i+1).arg(labels[i]);
         FOR(d, dim) item += QString(" %1").arg(samples[i][d], 0, 'f', 2);
         manualSelection->sampleList->addItem(item);
     }
@@ -1412,6 +1455,67 @@ void MLDemos::ManualSelectionRemove()
     canvas->ResetSamples();
     CanvasOptionsChanged();
     canvas->repaint();
+}
+
+void MLDemos::InputDimensionsUpdated()
+{
+    if(!canvas) return;
+    int dim = canvas->data->GetDimCount();
+    inputDimensions->dimList->clear();
+    fvec xMin(dim,FLT_MAX), xMax(dim,-FLT_MAX);
+    vector<fvec> samples = canvas->data->GetSamples();
+    FOR(i, samples.size())
+    {
+        FOR(d, dim)
+        {
+            xMin[d] = min(xMin[d], samples[i][d]);
+            xMax[d] = max(xMax[d], samples[i][d]);
+        }
+    }
+    FOR(d, dim)
+    {
+        QString item = QString("%1").arg(d+1);
+        if(d < canvas->dimNames.size()) item += QString(") %2").arg(canvas->dimNames.at(d));
+        item += QString(" : [%1 --> %2]").arg(xMin[d], 0, 'f', 3).arg(xMax[d], 0, 'f', 3);
+        inputDimensions->dimList->addItem(item);
+    }
+    ManualSelectionChanged();
+}
+
+void MLDemos::InputDimensionsChanged()
+{
+    int count = inputDimensions->dimList->count();
+    QList<QListWidgetItem*> selected = inputDimensions->dimList->selectedItems();
+    inputDimensions->TrainLabel->setText(QString("Used: %1").arg(selected.size()));
+    inputDimensions->TestLabel->setText(QString("Unused: %1").arg(count-selected.size()));
+}
+
+void MLDemos::InputDimensionsClear()
+{
+    inputDimensions->dimList->clearSelection();
+    ManualSelectionChanged();
+}
+
+void MLDemos::InputDimensionsInvert()
+{
+    FOR(i, inputDimensions->dimList->count())
+    {
+        inputDimensions->dimList->item(i)->setSelected(!inputDimensions->dimList->item(i)->isSelected());
+    }
+    ManualSelectionChanged();
+}
+
+void MLDemos::InputDimensionsRandom()
+{
+    float ratio = (inputDimensions->randomCombo->currentIndex()+1.f)/10.f;
+    inputDimensions->dimList->clearSelection();
+    u32* perm = randPerm(inputDimensions->dimList->count());
+    FOR(i, ratio*inputDimensions->dimList->count())
+    {
+        inputDimensions->dimList->item(perm[i])->setSelected(true);
+    }
+    KILL(perm);
+    ManualSelectionChanged();
 }
 
 void MLDemos::DrawCrosshair()
@@ -1765,7 +1869,11 @@ void MLDemos::FitToData()
     float zoom = canvas->GetZoom();
     if(zoom >= 1) zoom -=1;
     else zoom = 1/(-zoom) - 1;
-    if(zoom == displayOptions->spinZoom->value()) return; // nothing to be done!
+    if(zoom == displayOptions->spinZoom->value())
+    {
+        DisplayOptionChanged();
+        return;
+    }
     displayOptions->spinZoom->blockSignals(true);
     displayOptions->spinZoom->setValue(zoom);
     displayOptions->spinZoom->blockSignals(false);
@@ -1799,7 +1907,7 @@ void MLDemos::FitToData()
             projectors[tabUsedForTraining]->Draw(canvas, projector);
         }
     }
-    canvas->repaint();
+    DisplayOptionChanged();
 }
 
 void MLDemos::CanvasMoveEvent()
@@ -1808,6 +1916,8 @@ void MLDemos::CanvasMoveEvent()
     drawTimer->Stop();
     drawTimer->Clear();
     QMutexLocker lock(&mutex);
+    UpdateLearnedModel();
+
     if(classifier)
     {
         classifiers[tabUsedForTraining]->Draw(canvas, classifier);
@@ -1879,6 +1989,7 @@ void MLDemos::CanvasTypeChanged()
     if(canvas->canvasType == ui.canvasTypeCombo->currentIndex()) return;
     canvas->SetCanvasType(ui.canvasTypeCombo->currentIndex());
     CanvasOptionsChanged();
+    UpdateLearnedModel();
     canvas->repaint();
 }
 
@@ -1974,7 +2085,7 @@ void MLDemos::Navigation( fvec sample )
     }
     sprintf(string, "samples: %d (o:%.3d|x:%.3d)", count, pcount, ncount);
     information += QString(string);
-    sprintf(string, " | x: %.3f y: %.3f", sample[0], sample[1]);
+    sprintf(string, " | x%d: %.3f x%d: %.3f", canvas->xIndex+1, sample[canvas->xIndex], canvas->yIndex+1, sample[canvas->yIndex]);
     information += QString(string);
     mutex.tryLock(500);
     if(classifier)
@@ -2246,6 +2357,25 @@ void MLDemos::Load(QString filename)
     canvas->repaint();
 }
 
+void MLDemos::ImportData()
+{
+    if(!canvas || !import) return;
+    QString filename = QFileDialog::getOpenFileName(this, tr("Import Data Data"), "", tr("Dataset Files (*.csv *.data *.txt)"));
+    if(filename.isEmpty()) return;
+    import->Start();
+    import->Parse(filename);
+    import->SendData();
+}
+
+void MLDemos::ImportData(QString filename)
+{
+    import->Start();
+    import->Parse(filename);
+    import->SendData();
+    if(import->GetHeaders().size()) canvas->dimNames = import->GetHeaders();
+    ui.statusBar->showMessage("Data loaded successfully");
+}
+
 void MLDemos::dragEnterEvent(QDragEnterEvent *event)
 {
     QList<QUrl> dragUrl;
@@ -2253,7 +2383,7 @@ void MLDemos::dragEnterEvent(QDragEnterEvent *event)
     {
         QList<QUrl> urls = event->mimeData()->urls();
         QStringList dataType;
-        dataType << ".ml";
+        dataType << ".ml" << ".csv" << ".data";
         for(int i=0; i<urls.size(); i++)
         {
             QString filename = urls[i].path();
@@ -2279,12 +2409,22 @@ void MLDemos::dropEvent(QDropEvent *event)
     FOR(i, event->mimeData()->urls().length())
     {
         QString filename = event->mimeData()->urls()[i].toLocalFile();
+        qDebug() << "accepted drop file:" << filename;
         if(filename.toLower().endsWith(".ml"))
         {
             ClearData();
             canvas->data->Load(filename.toAscii());
             LoadParams(filename);
             ui.statusBar->showMessage("Data loaded successfully");
+            ResetPositiveClass();
+            ManualSelectionUpdated();
+            UpdateInfo();
+            canvas->repaint();
+        }
+        else if(filename.toLower().endsWith(".csv") || filename.toLower().endsWith(".data"))
+        {
+            ClearData();
+            ImportData(filename);
             ResetPositiveClass();
             ManualSelectionUpdated();
             UpdateInfo();
@@ -2332,6 +2472,7 @@ void MLDemos::CompareScreenshot()
     QPixmap screenshot = compare->Display().copy();
     clipboard->setImage(screenshot.toImage());
     //clipboard->setPixmap(screenshot);
+    clipboard->setText(compare->ToString());
 }
 
 void MLDemos::ToClipboard()
@@ -2379,7 +2520,7 @@ void MLDemos::ActivateIO()
 
 void MLDemos::ActivateImport()
 {
-    QList<QAction *> pluginActions = ui.menuImport->actions();
+    QList<QAction *> pluginActions = ui.menuInput_Output->actions();
     FOR(i, inputoutputs.size())
     {
         if(i<pluginActions.size() && inputoutputs[i] && pluginActions[i])
@@ -2437,7 +2578,8 @@ void MLDemos::SetData(std::vector<fvec> samples, ivec labels, std::vector<ipair>
     sourceData.clear();
     sourceLabels.clear();
     projectedData.clear();
-    dimensionNames.clear();
+    if(!canvas) return;
+    canvas->dimNames.clear();
     canvas->sampleColors.clear();
     canvas->data->Clear();
     canvas->data->AddSamples(samples, labels);
@@ -2452,8 +2594,18 @@ void MLDemos::SetData(std::vector<fvec> samples, ivec labels, std::vector<ipair>
 	ResetPositiveClass();
     ManualSelectionUpdated();
     CanvasOptionsChanged();
-	canvas->ResetSamples();
+    canvas->ResetSamples();
 	canvas->repaint();
+}
+
+void MLDemos::SetDimensionNames(QStringList headers)
+{
+    qDebug() << "setting dimension names" << headers;
+    canvas->dimNames = headers;
+    ResetPositiveClass();
+    CanvasOptionsChanged();
+    canvas->ResetSamples();
+    canvas->repaint();
 }
 
 void MLDemos::SetTimeseries(std::vector<TimeSerie> timeseries)
@@ -2462,7 +2614,8 @@ void MLDemos::SetTimeseries(std::vector<TimeSerie> timeseries)
     sourceData.clear();
     sourceLabels.clear();
     projectedData.clear();
-    dimensionNames.clear();
+    if(!canvas) return;
+    canvas->dimNames.clear();
     canvas->sampleColors.clear();
     canvas->data->Clear();
 	canvas->data->AddTimeSeries(timeseries);

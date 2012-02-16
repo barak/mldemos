@@ -178,7 +178,7 @@ void CSVParser::parse(const char* fileName)
         ++parser; // we skip the first line as it might be a header line
         if(parser.eof() || !parser->size()) continue;
         vector<string> parsed = parser->getParsedLine();
-        qDebug() << "separator: " << separators[i].c_str() << ":" << parsed.size();
+        //qDebug() << "separator: " << separators[i].c_str() << ":" << parsed.size();
         if(parsed.size() > dim)
         {
             dim = parsed.size();
@@ -223,7 +223,7 @@ void CSVParser::parse(const char* fileName)
     file.close();
 }
 
-void CSVParser::setOutputColumn(unsigned int column)
+void CSVParser::setOutputColumn(int column)
 {
     outputLabelColumn = column;
    //getOutputLabelTypes(true); // need to update output label types
@@ -290,7 +290,8 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     vector<fvec> samples(count);
     ivec labels(count);
     int dim = data[0].size();
-    outputLabelColumn = min(dim-1, outputLabelColumn);
+    if(outputLabelColumn != -1) outputLabelColumn = min(dim-1, outputLabelColumn);
+
     vector< map<string,int> > labelMaps(dim);
     ivec labelCounters(dim,0);
     pair<map<string,int>::iterator,bool> ret;
@@ -299,7 +300,7 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
         if(!i && bFirstRowAsHeader) continue;
         // check if it's always a number
         fvec& sample = samples[i-headerSkip];
-        sample.resize(dim-1);
+        sample.resize((outputLabelColumn==-1) ? dim : dim-1);
         FOR(j, dim)
         {
             QString s(data[i][j].c_str());
@@ -317,46 +318,61 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
             }
             if(j!=outputLabelColumn)
             {
-                int index = j < outputLabelColumn ? j : j-1;
-                sample[index] = val;
+                if(outputLabelColumn==-1) sample[j] = val;
+                else
+                {
+                    int index = j < outputLabelColumn ? j : j-1;
+                    sample[index] = val;
+                }
             }
         }
     }
 
-    qDebug() << "label indices";
-    for(map<string,int>::iterator it = labelMaps[outputLabelColumn].begin(); it != labelMaps[outputLabelColumn].end(); it++)
+    if(outputLabelColumn == -1)
     {
-        qDebug() << (it->first).c_str() << " " << it->second;
-    }
-
-    bool numerical = true;
-    FOR(i, data.size())
-    {
-        if(!i && bFirstRowAsHeader) continue;
-        bool ok;
-        float val = QString(data[i][outputLabelColumn].c_str()).toFloat(&ok);
-        if(!ok)
+        FOR(i, data.size())
         {
-            numerical = false;
-            break;
+            if(!i && bFirstRowAsHeader) continue;
+            labels[i-headerSkip] = 0;
         }
     }
-    FOR(i, data.size())
+    else
     {
-        if(!i && bFirstRowAsHeader) continue;
-        bool ok;
-        float val = QString(data[i][outputLabelColumn].c_str()).toFloat(&ok);
-        if(numerical)
+        /*
+        qDebug() << "label indices";
+        for(map<string,int>::iterator it = labelMaps[outputLabelColumn].begin(); it != labelMaps[outputLabelColumn].end(); it++)
         {
-            labels[i-headerSkip] = val;
+            qDebug() << (it->first).c_str() << " " << it->second;
         }
-        else
+        */
+        bool numerical = true;
+        FOR(i, data.size())
         {
-            int label = labelMaps[outputLabelColumn][data[i][outputLabelColumn]];
-            labels[i-headerSkip] = label;
+            if(!i && bFirstRowAsHeader) continue;
+            bool ok;
+            float val = QString(data[i][outputLabelColumn].c_str()).toFloat(&ok);
+            if(!ok)
+            {
+                numerical = false;
+                break;
+            }
+        }
+        FOR(i, data.size())
+        {
+            if(!i && bFirstRowAsHeader) continue;
+            bool ok;
+            float val = QString(data[i][outputLabelColumn].c_str()).toFloat(&ok);
+            if(numerical)
+            {
+                labels[i-headerSkip] = val;
+            }
+            else
+            {
+                int label = labelMaps[outputLabelColumn][data[i][outputLabelColumn]];
+                labels[i-headerSkip] = label;
+            }
         }
     }
-
     if(maxSamples != -1 && maxSamples < samples.size())
     {
         vector<fvec> newSamples(maxSamples);
@@ -374,11 +390,12 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     }
     if(!excludeIndex.size()) return pair<vector<fvec>,ivec>(samples,labels);
     vector<fvec> newSamples(count);
-    int newDim = dim-1 - excludeIndex.size();
-    qDebug() << "Indices to be excluded: " << excludeIndex.size() << "(newDim: " << newDim << ")";
+    int newDim = dim - excludeIndex.size();
+    if(outputLabelColumn != -1) newDim--;
+    //qDebug() << "Indices to be excluded: " << excludeIndex.size() << "(newDim: " << newDim << ")";
     FOR(i, excludeIndex.size())
     {
-        qDebug() << i << ":" << excludeIndex[i];
+        //qDebug() << i << ":" << excludeIndex[i];
         // if it's the output we can ignore it but we need to reincrement the number of dimensions
         if(excludeIndex[i] == outputLabelColumn)
         {
@@ -398,11 +415,12 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
         FOR(d, dim)
         {
             if(bExclude[d] || d == outputLabelColumn) continue;
-            if (d < outputLabelColumn) newSamples[i][nD] = samples[i][d];
+            if(outputLabelColumn == -1) newSamples[i][nD] = samples[i][d];
+            else if (d < outputLabelColumn) newSamples[i][nD] = samples[i][d];
             else if(d > outputLabelColumn) newSamples[i][nD] = samples[i][d-1];
             nD++;
         }
     }
-    qDebug() << "newSamples: " << newSamples.size() << " labels: " << labels.size();
+    qDebug() << "Imported samples: " << newSamples.size() << " labels: " << labels.size();
     return pair<vector<fvec>,ivec>(newSamples,labels);
 }

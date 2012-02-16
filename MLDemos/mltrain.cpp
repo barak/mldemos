@@ -40,9 +40,10 @@ bool MLDemos::Train(Classifier *classifier, int positive, float trainRatio, bvec
     if(!classifier) return false;
     ivec labels = canvas->data->GetLabels();
     ivec newLabels;
+    std::map<int,int> binaryClassMap;
+
     newLabels.resize(labels.size(), 1);
     bool bMulticlass = classifier->IsMultiClass();
-    //std::map<int,int> classMap, inverseMap;
     if(!bMulticlass)
     {
         if(positive == 0)
@@ -65,185 +66,273 @@ bool MLDemos::Train(Classifier *classifier, int positive, float trainRatio, bvec
     else
     {
         newLabels = labels;
-        /*
+        //
         int cnt=0;
-        FOR(i, labels.size()) if(!classMap.count(labels[i])) classMap[labels[i]] = cnt++;
-        for(map<int,int>::iterator it=classMap.begin(); it != classMap.end(); it++) inverseMap[it->second] = it->first;
-        newLabels.resize(labels.size());
-        FOR(i, labels.size()) newLabels[i] = classMap[labels[i]];
-        */
+        FOR(i, labels.size()) if(!binaryClassMap.count(labels[i])) binaryClassMap[labels[i]] = cnt++;
+        if(binaryClassMap.size() > 2) binaryClassMap.clear(); // standard multiclass, no problems
+        //for(map<int,int>::iterator it=classMap.begin(); it != classMap.end(); it++);
+        //positive = classMap.begin()->first;
+        //binaryLabels.resize(labels.size());
+        //FOR(i, labels.size()) binaryLabels[i] = labels[i] == positive ? 1 : 0;
     }
 
     classifier->rocdata.clear();
     classifier->roclabels.clear();
 
-    vector<fvec> samples = canvas->data->GetSamples();        
-    if(trainRatio == 1 && !trainList.size())
+    lastTrainingInfo = "";
+    map<int, int> truePerClass;
+    map<int, int> falsePerClass;
+    map<int, int> countPerClass;
+
+    ivec inputDims = GetInputDimensions();
+    vector<fvec> samples = canvas->data->GetSampleDims(inputDims);
+
+    vector<fvec> trainSamples, testSamples;
+    ivec trainLabels, testLabels;
+    u32 *perm = 0;
+    int trainCnt, testCnt;
+    if(trainList.size())
     {
-        classifier->Train(samples, newLabels);
-        // we generate the roc curve for this guy
-        vector<f32pair> rocData;
-        FOR(i, samples.size())
+        FOR(i, trainList.size())
         {
-            if(bMulticlass)
+            if(trainList[i])
             {
-                fvec res = classifier->TestMulti(samples[i]);
-                if(res.size() == 1)
-                {
-                    rocData.push_back(f32pair(res[0], newLabels[i]));
-                }
-                else
-                {
-                    int maxClass = 0;
-                    for(int j=1; j<res.size(); j++) if(res[maxClass] < res[j]) maxClass = j;
-                    rocData.push_back(f32pair(classifier->inverseMap[maxClass], newLabels[i]));
-                }
+                trainSamples.push_back(samples[i]);
+                trainLabels.push_back(newLabels[i]);
             }
             else
             {
-                float resp = classifier->Test(samples[i]);
-                rocData.push_back(f32pair(resp, newLabels[i]));
+                testSamples.push_back(samples[i]);
+                testLabels.push_back(newLabels[i]);
             }
         }
-        classifier->rocdata.push_back(rocData);
-        classifier->roclabels.push_back("training");
+        trainCnt = trainSamples.size();
+        testCnt = testSamples.size();
     }
     else
     {
-        vector<fvec> trainSamples, testSamples;
-        ivec trainLabels, testLabels;
-        u32 *perm = 0;
-        int trainCnt, testCnt;
-        if(trainList.size())
+        map<int,int> classCnt, trainClassCnt, testClassCnt;
+        FOR(i, labels.size())
         {
-            FOR(i, trainList.size())
+            classCnt[labels[i]]++;
+        }
+
+        trainCnt = (int)(samples.size()*trainRatio);
+        testCnt = samples.size() - trainCnt;
+        trainSamples.resize(trainCnt);
+        trainLabels.resize(trainCnt);
+        testSamples.resize(testCnt);
+        testLabels.resize(testCnt);
+        perm = randPerm(samples.size());
+        FOR(i, trainCnt)
+        {
+            trainSamples[i] = samples[perm[i]];
+            trainLabels[i] = newLabels[perm[i]];
+            trainClassCnt[trainLabels[i]]++;
+        }
+        for(int i=trainCnt; i<samples.size(); i++)
+        {
+            testSamples[i-trainCnt] = samples[perm[i]];
+            testLabels[i-trainCnt] = newLabels[perm[i]];
+            testClassCnt[trainLabels[i]]++;
+        }
+        // we need to make sure that we have at least one sample per class
+        for(map<int,int>::iterator it=classCnt.begin();it!=classCnt.end();it++)
+        {
+            if(!trainClassCnt.count(it->first))
             {
-                if(trainList[i])
+                FOR(i, testSamples.size())
                 {
-                    trainSamples.push_back(samples[i]);
-                    trainLabels.push_back(newLabels[i]);
-                }
-                else
-                {
-                    testSamples.push_back(samples[i]);
-                    testLabels.push_back(newLabels[i]);
+                    if(testLabels[i] != it->first) continue;
+                    trainSamples.push_back(testSamples[i]);
+                    trainLabels.push_back(testLabels[i]);
+                    testSamples.erase(testSamples.begin() + i);
+                    testLabels.erase(testLabels.begin() + i);
+                    trainCnt++;
+                    testCnt--;
+                    break;
                 }
             }
-            trainCnt = trainSamples.size();
-            testCnt = testSamples.size();
+        }
+    }
+    classifier->Train(trainSamples, trainLabels);
+
+    // we generate the roc curve for this guy
+    bool bTrueMulti = bMulticlass;
+    vector<f32pair> rocData;
+    FOR(i, trainSamples.size())
+    {
+        int label = trainLabels[i];
+        if(bMulticlass && binaryClassMap.size()) label = binaryClassMap[label];
+        if(bMulticlass)
+        {
+            fvec res = classifier->TestMulti(trainSamples[i]);
+            if(res.size() == 1)
+            {
+                rocData.push_back(f32pair(res[0], label));
+                float resp = res[0];
+                if(resp > 0 && label == 1) truePerClass[1]++;
+                else if(resp > 0 && label != 1) falsePerClass[0]++;
+                else if(label == 1) falsePerClass[1]++;
+                else truePerClass[0]++;
+                bTrueMulti = false;
+            }
+            else
+            {
+                int maxClass = 0;
+                for(int j=1; j<res.size(); j++) if(res[maxClass] < res[j]) maxClass = j;
+                rocData.push_back(f32pair(classifier->inverseMap[maxClass], label));
+                int c = classifier->inverseMap[maxClass];
+                if(label != c) falsePerClass[c]++;
+                else truePerClass[c]++;
+            }
         }
         else
         {
-            map<int,int> classCnt, trainClassCnt, testClassCnt;
-            FOR(i, labels.size())
-            {
-                classCnt[labels[i]]++;
-            }
-
-            trainCnt = (int)(samples.size()*trainRatio);
-            testCnt = samples.size() - trainCnt;
-            trainSamples.resize(trainCnt);
-            trainLabels.resize(trainCnt);
-            testSamples.resize(testCnt);
-            testLabels.resize(testCnt);
-            perm = randPerm(samples.size());
-            FOR(i, trainCnt)
-            {
-                trainSamples[i] = samples[perm[i]];
-                trainLabels[i] = newLabels[perm[i]];
-                trainClassCnt[trainLabels[i]]++;
-            }
-            for(int i=trainCnt; i<samples.size(); i++)
-            {
-                testSamples[i-trainCnt] = samples[perm[i]];
-                testLabels[i-trainCnt] = newLabels[perm[i]];
-                testClassCnt[trainLabels[i]]++;
-            }
-            // we need to make sure that we have at least one sample per class
-            for(map<int,int>::iterator it=classCnt.begin();it!=classCnt.end();it++)
-            {
-                if(!trainClassCnt.count(it->first))
-                {
-                    FOR(i, testSamples.size())
-                    {
-                        if(testLabels[i] != it->first) continue;
-                        trainSamples[i] = testSamples[i];
-                        trainLabels[i] = testLabels[i];
-                        testSamples.erase(testSamples.begin() + i);
-                        testLabels.erase(testLabels.begin() + i);
-                        trainCnt++;
-                        testCnt--;
-                        break;
-                    }
-                }
-            }
+            float resp = classifier->Test(trainSamples[i]);
+            rocData.push_back(f32pair(resp, label));
+            if(resp > 0 && label == 1) truePerClass[1]++;
+            else if(resp > 0 && label != 1) falsePerClass[0]++;
+            else if(label == 1) falsePerClass[1]++;
+            else truePerClass[0]++;
         }
-        classifier->Train(trainSamples, trainLabels);
-
-        // we generate the roc curve for this guy
-        vector<f32pair> rocData;
-        FOR(i, trainSamples.size())
-        {
-            if(bMulticlass)
-            {
-                fvec res = classifier->TestMulti(trainSamples[i]);
-                if(res.size() == 1)
-                {
-                    rocData.push_back(f32pair(res[0], trainLabels[i]));
-                }
-                else
-                {
-                    int maxClass = 0;
-                    for(int j=1; j<res.size(); j++) if(res[maxClass] < res[j]) maxClass = j;
-                    rocData.push_back(f32pair(classifier->inverseMap[maxClass], trainLabels[i]));
-                }
-            }
-            else
-            {
-                float resp = classifier->Test(trainSamples[i]);
-                rocData.push_back(f32pair(resp, trainLabels[i]));
-            }
-        }
-        classifier->rocdata.push_back(rocData);
-        classifier->roclabels.push_back("training");
-        rocData.clear();
-        FOR(i, testSamples.size())
-        {
-            if(bMulticlass)
-            {
-                fvec res = classifier->TestMulti(testSamples[i]);
-                if(res.size() == 1)
-                {
-                    rocData.push_back(f32pair(res[0], testLabels[i]));
-                }
-                else
-                {
-                    int maxClass = 0;
-                    for(int j=1; j<res.size(); j++) if(res[maxClass] < res[j]) maxClass = j;
-                    rocData.push_back(f32pair(classifier->inverseMap[maxClass], testLabels[i]));
-                }
-            }
-            else
-            {
-                float resp = classifier->Test(testSamples[i]);
-                rocData.push_back(f32pair(resp, testLabels[i]));
-            }
-        }
-        classifier->rocdata.push_back(rocData);
-        classifier->roclabels.push_back("test");
-        KILL(perm);
+        if(bMulticlass) countPerClass[label]++;
+        else countPerClass[(label==1)?1:0]++;
     }
+    if(!bTrueMulti) rocData = FixRocData(rocData);
+    classifier->rocdata.push_back(rocData);
+    classifier->roclabels.push_back("training");
+    lastTrainingInfo += QString("\nTraining Set (%1 samples):\n").arg(trainSamples.size());
+    int posClass = 1;
+    if(bTrueMulti)
+    {
+        for(map<int,int>::iterator it = countPerClass.begin(); it != countPerClass.end(); it++)
+        {
+            int c = it->first;
+            int tp = truePerClass[c];
+            int fp = falsePerClass[c];
+            float ratio = it->second != 0 ? tp / (float)it->second : 0;
+            lastTrainingInfo += QString("Class %1 (%5 samples): %2 correct (%4%)\n%3 incorrect\n").arg(c).arg(tp).arg(fp).arg((int)(ratio*100)).arg(it->second);
+        }
+    }
+    else
+    {
+        if(truePerClass[1] / (float) countPerClass[1] < 0.25)
+        {
+            posClass = 0;
+        }
+        int tp = posClass ? truePerClass[1] : falsePerClass[1];
+        int fp = posClass ? falsePerClass[1] : truePerClass[1];
+        int count = countPerClass[1];
+        float ratio = count != 0 ? tp/(float)count : 1;
+        lastTrainingInfo += QString("Positive (%4 samples): %1 correct (%3%)\n%2 incorrect\n").arg(tp).arg(fp).arg((int)(ratio*100)).arg(count);
+        tp = posClass ? truePerClass[0] : falsePerClass[0];
+        fp = posClass ? falsePerClass[0] : truePerClass[0];
+        count = countPerClass[0];
+        ratio = count != 0 ? tp/(float)count : 1;
+        lastTrainingInfo += QString("Negative (%4 samples): %1 correct (%3%)\n%2 incorrect\n").arg(tp).arg(fp).arg((int)(ratio*100)).arg(count);
+    }
+
+    truePerClass.clear();
+    falsePerClass.clear();
+    countPerClass.clear();
+    rocData.clear();
+    FOR(i, testSamples.size())
+    {
+        int label = testLabels[i];
+        if(bMulticlass && binaryClassMap.size()) label = binaryClassMap[label];
+        if(bMulticlass)
+        {
+            fvec res = classifier->TestMulti(testSamples[i]);
+            if(res.size() == 1)
+            {
+                rocData.push_back(f32pair(res[0], label));
+                float resp = res[0];
+                if(resp > 0 && label == 1) truePerClass[1]++;
+                else if(resp > 0 && label != 1) falsePerClass[0]++;
+                else if(label == 1) falsePerClass[1]++;
+                else truePerClass[0]++;
+                bTrueMulti = false;
+            }
+            else
+            {
+                int maxClass = 0;
+                for(int j=1; j<res.size(); j++) if(res[maxClass] < res[j]) maxClass = j;
+                rocData.push_back(f32pair(classifier->inverseMap[maxClass], label));
+                int c = classifier->inverseMap[maxClass];
+                if(label != c) falsePerClass[c]++;
+                else truePerClass[c]++;
+            }
+        }
+        else
+        {
+            float resp = classifier->Test(testSamples[i]);
+            rocData.push_back(f32pair(resp, label));
+            if(resp > 0 && label == 1) truePerClass[1]++;
+            else if(resp > 0 && label != 1) falsePerClass[0]++;
+            else if(label == 1) falsePerClass[1]++;
+            else truePerClass[0]++;
+        }
+        if(bMulticlass) countPerClass[label]++;
+        else countPerClass[(label==1)?1:0]++;
+    }
+    if(!bTrueMulti) rocData = FixRocData(rocData);
+    classifier->rocdata.push_back(rocData);
+    classifier->roclabels.push_back("test");
+    lastTrainingInfo += QString("\nTesting Set (%1 samples):\n").arg(testSamples.size());
+    if(bTrueMulti)
+    {
+        for(map<int,int>::iterator it = countPerClass.begin(); it != countPerClass.end(); it++)
+        {
+            int c = it->first;
+            int tp = truePerClass[c];
+            int fp = falsePerClass[c];
+            float ratio = it->second != 0 ? tp / (float)it->second : 0;
+            lastTrainingInfo += QString("Class %1 (%5 samples): %2 correct (%4%)\n%3 incorrect\n").arg(c).arg(tp).arg(fp).arg((int)(ratio*100)).arg(it->second);
+        }
+    }
+    else
+    {
+        int tp = posClass ? truePerClass[1] : falsePerClass[1];
+        int fp = posClass ? falsePerClass[1] : truePerClass[1];
+        int count = countPerClass[1];
+        float ratio = count != 0 ? tp/(float)count : 1;
+        lastTrainingInfo += QString("Positive (%4 samples): %1 correct (%3%)\n%2 incorrect\n").arg(tp).arg(fp).arg((int)(ratio*100)).arg(count);
+        tp = posClass ? truePerClass[0] : falsePerClass[0];
+        fp = posClass ? falsePerClass[0] : truePerClass[0];
+        count = countPerClass[0];
+        ratio = count != 0 ? tp/(float)count : 1;
+        lastTrainingInfo += QString("Negative (%4 samples): %1 correct (%3%)\n%2 incorrect\n").arg(tp).arg(fp).arg((int)(ratio*100)).arg(count);
+    }
+    KILL(perm);
+
     bIsRocNew = true;
     bIsCrossNew = true;
     SetROCInfo();
     return true;
 }
 
-void MLDemos::Train(Regressor *regressor, float trainRatio, bvec trainList)
+void MLDemos::Train(Regressor *regressor, int outputDim, float trainRatio, bvec trainList)
 {
-    if(!regressor) return;
-    vector<fvec> samples = canvas->data->GetSamples();
+    if(!regressor || !canvas->data->GetCount()) return;
+    ivec inputDims = GetInputDimensions();
+    int outputIndexInList = -1;
+    if(inputDims.size()==1 && inputDims[0] == outputDim) return; // we dont have enough dimensions for training
+    FOR(i, inputDims.size()) if(outputDim == inputDims[i])
+    {
+        outputIndexInList = i;
+        break;
+    }
+
+    vector<fvec> samples = canvas->data->GetSampleDims(inputDims, outputIndexInList == -1 ? outputDim : -1);
     ivec labels = canvas->data->GetLabels();
+    if(!samples.size()) return;
+    int cnt = samples.size();
+    int dim = samples[0].size();
+    if(dim < 2) return;
+
+    regressor->SetOutputDim(outputDim);
+
     fvec trainErrors, testErrors;
     if(trainRatio == 1.f && !trainList.size())
     {
@@ -254,7 +343,7 @@ void MLDemos::Train(Regressor *regressor, float trainRatio, bvec trainList)
             fvec sample = samples[i];
             int dim = sample.size();
             fvec res = regressor->Test(sample);
-            float error = fabs(res[0] - sample[dim-1]);
+            float error = fabs(res[0] - sample.back());
             trainErrors.push_back(error);
         }
         regressor->trainErrors = trainErrors;
@@ -304,10 +393,10 @@ void MLDemos::Train(Regressor *regressor, float trainRatio, bvec trainList)
 
         FOR(i, trainCnt)
         {
-            fvec sample = samples[perm[i]];
+            fvec sample = trainSamples[i];
             int dim = sample.size();
             fvec res = regressor->Test(sample);
-            float error = fabs(res[0] - sample[dim-1]);
+            float error = fabs(res[0] - sample.back());
             trainErrors.push_back(error);
         }
         FOR(i, testCnt)
@@ -315,8 +404,9 @@ void MLDemos::Train(Regressor *regressor, float trainRatio, bvec trainList)
             fvec sample = testSamples[i];
             int dim = sample.size();
             fvec res = regressor->Test(sample);
-            float error = fabs(res[0] - sample[dim-1]);
+            float error = fabs(res[0] - sample.back());
             testErrors.push_back(error);
+            qDebug() << " test error: " << i << error;
         }
         regressor->trainErrors = trainErrors;
         regressor->testErrors = testErrors;
@@ -447,9 +537,8 @@ fvec MLDemos::Test(Dynamical *dynamical, vector< vector<fvec> > trajectories, iv
     float dT = dynamical->dT;
     fvec sample; sample.resize(dim,0);
     fvec vTrue; vTrue.resize(dim, 0);
-    fvec xMin, xMax;
-    xMin.resize(dim, FLT_MAX);
-    xMax.resize(dim, -FLT_MAX);
+    fvec xMin(dim, FLT_MAX);
+    fvec xMax(dim, -FLT_MAX);
 
     // test each trajectory for errors
     int errorCnt=0;
@@ -485,14 +574,13 @@ fvec MLDemos::Test(Dynamical *dynamical, vector< vector<fvec> > trajectories, iv
 
     float errorTarget = 0;
     // test each trajectory for target
+    fvec pos(dim), end(dim);
     FOR(i, trajectories.size())
     {
-        fvec pos = trajectories[i][0];
-        fvec end = trajectories[i][trajectories[i].size()-1];
         FOR(d, dim)
         {
-            pos.pop_back();
-            end.pop_back();
+            pos[d] = trajectories[i].front()[d];
+            end[d] = trajectories[i].back()[d];
         }
         if(!endpoints.size()) endpoints.push_back(end);
         else
@@ -531,7 +619,6 @@ fvec MLDemos::Test(Dynamical *dynamical, vector< vector<fvec> > trajectories, iv
     res.push_back(errorTarget);
 
     fvec xDiff = xMax - xMin;
-    fvec pos; pos.resize(dim);
     errorTarget = 0;
     int testCount = 100;
     FOR(i, testCount)
@@ -589,7 +676,8 @@ void MLDemos::Compare()
     float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
     int ratioIndex = optionsCompare->traintestRatioCombo->currentIndex();
     float trainRatio = ratios[ratioIndex];
-    int positive = optionsCompare->positiveSpin->value();
+    //int positive = optionsCompare->positiveSpin->value();
+    int positive = 1;
 
     compare->Clear();
 
@@ -685,6 +773,7 @@ void MLDemos::Compare()
                         fmeasureTrain.push_back(res[0]);
                         precisionTrain.push_back(res[1]);
                         recallTrain.push_back(res[2]);
+                        qDebug() << "training" << res[0] << res[1] << res[2];
                     }
                     else
                     {
@@ -692,6 +781,7 @@ void MLDemos::Compare()
                         std::vector<f32pair> rocdata = classifier->rocdata[0];
                         FOR(j, rocdata.size())
                         {
+                            qDebug() << "rocdata: " << j << rocdata[j].first << rocdata[j].second;
                             if(rocdata[j].first != rocdata[j].second)
                             {
                                 if(classes.size() > 2) errors++;
@@ -770,6 +860,7 @@ void MLDemos::Compare()
             QStringList s = line.split(":");
             int tab = s[1].toInt();
             if(tab >= regressors.size() || !regressors[tab]) continue;
+            int outputDim = optionsCompare->outputDimCombo->currentIndex();
             QTextStream paramStream(&paramString);
             QString paramName;
             float paramValue;
@@ -780,7 +871,7 @@ void MLDemos::Compare()
                 regressors[tab]->LoadParams(paramName, paramValue);
             }
             bvec trainList;
-            if(optionsClassify->manualTrainButton->isChecked())
+            if(optionsRegress->manualTrainButton->isChecked())
             {
                 // we get the list of samples that are checked
                 trainList = GetManualSelection();
@@ -792,7 +883,8 @@ void MLDemos::Compare()
             {
                 regressor = regressors[tab]->GetRegressor();
                 if(!regressor) continue;
-                Train(regressor, trainRatio, trainList);
+                qDebug() << " training: " << regressors[tab]->GetName();
+                Train(regressor, outputDim, trainRatio, trainList);
                 if(regressor->trainErrors.size())
                 {
                     float error = 0.f;
@@ -805,7 +897,7 @@ void MLDemos::Compare()
                     float error = 0.f;
                     FOR(i, regressor->testErrors.size()) error += regressor->testErrors[i];
                     error /= regressor->testErrors.size();
-                    resultTest = regressor->testErrors;
+                    resultTest.push_back(error);
                 }
                 DEL(regressor);
 
@@ -813,14 +905,14 @@ void MLDemos::Compare()
                 qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
                 if(progress.wasCanceled())
                 {
-                    compare->AddResults(resultTrain, "Error (Training)", algoName);
                     compare->AddResults(resultTest, "Error (Testing)", algoName);
+                    compare->AddResults(resultTrain, "Error (Training)", algoName);
                     compare->Show();
                     return;
                 }
             }
-            compare->AddResults(resultTrain, "Error (Training)", algoName);
             compare->AddResults(resultTest, "Error (Testing)", algoName);
+            compare->AddResults(resultTrain, "Error (Training)", algoName);
         }
         if(line.startsWith("Dynamical"))
         {

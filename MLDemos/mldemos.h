@@ -42,6 +42,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "ui_drawingToolsContext3.h"
 #include "ui_drawingToolsContext4.h"
 #include "ui_manualSelection.h"
+#include "ui_inputDimensions.h"
 
 #include "canvas.h"
 #include "classifier.h"
@@ -53,6 +54,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "widget.h"
 #include "drawTimer.h"
 #include "expose.h"
+#include "dataImporter.h"
 
 class MLDemos : public QMainWindow
 {
@@ -64,7 +66,7 @@ private:
 	*actionClearData, *actionClearModel, *actionScreenshot,
 	*actionNew, *actionSave, *actionLoad;
 
-    QDialog *displayDialog, *about, *statsDialog, *manualSelectDialog;
+    QDialog *displayDialog, *about, *statsDialog, *manualSelectDialog, *inputDimensionsDialog;
 
     QWidget *algorithmWidget, *regressWidget, *dynamicWidget, *classifyWidget, *clusterWidget, *maximizeWidget, *compareWidget, *projectWidget;
 
@@ -88,7 +90,8 @@ private:
 	Ui::DrawingToolbarContext3 *drawToolbarContext3;
 	Ui::DrawingToolbarContext4 *drawToolbarContext4;
     Ui::ManualSelection* manualSelection;
-	QWidget *drawToolbarWidget;
+    Ui::InputDimensions* inputDimensions;
+    QWidget *drawToolbarWidget;
 	QWidget *drawContext1Widget, *drawContext2Widget, *drawContext3Widget, *drawContext4Widget;
 	QToolBar *toolBar;
 
@@ -96,14 +99,15 @@ private:
 	QTime drawTime;
 	Canvas *canvas;
     Expose *expose;
+    DataImporter *import;
 	ipair trajectory;
 	Obstacle obstacle;
 	bool bNewObstacle;
-
+    QString lastTrainingInfo;
 
 	void closeEvent(QCloseEvent *event);
     bool Train(Classifier *classifier, int positive, float trainRatio=1, bvec trainList = bvec());
-    void Train(Regressor *regressor, float trainRatio=1, bvec trainList = bvec());
+    void Train(Regressor *regressor, int outputDim=-1, float trainRatio=1, bvec trainList = bvec());
 	fvec Train(Dynamical *dynamical);
     void Train(Clusterer *clusterer, bvec trainList = bvec());
 	void Train(Maximizer *maximizer);
@@ -142,8 +146,10 @@ private:
 	void LoadParams(QString filename);
 	void Load(QString filename);
 	void Save(QString filename);
+    void ImportData(QString filename);
 
     std::vector<bool> GetManualSelection();
+    ivec GetInputDimensions();
     void UpdateInfo();
 	void SetCrossValidationInfo();
 	bool bIsRocNew;
@@ -161,7 +167,6 @@ public:
     Projector *projector;
     std::vector<fvec> sourceData;
     std::vector<fvec> projectedData;
-    std::vector<QString> dimensionNames;
     ivec sourceLabels;
 
     QMutex mutex;
@@ -174,6 +179,7 @@ signals:
 public slots:
     void SetData(std::vector<fvec> samples, ivec labels, std::vector<ipair> trajectories, bool bProjected);
 	void SetTimeseries(std::vector<TimeSerie> timeseries);
+    void SetDimensionNames(QStringList headers);
 	void QueryClassifier(std::vector<fvec> samples);
 	void QueryRegressor(std::vector<fvec> samples);
 	void QueryDynamical(std::vector<fvec> samples);
@@ -222,6 +228,7 @@ private slots:
 
 	void SaveData();
 	void LoadData();
+    void ImportData();
 	void ExportOutput();
 	void ExportAnimation();
 	void ExportSVG();
@@ -242,9 +249,11 @@ private slots:
 
 
     void ManualSelection();
+    void InputDimensions();
     void ExposeData();
 	void FitToData();
 	void ZoomChanged(float d);
+    void UpdateLearnedModel();
 	void CanvasMoveEvent();
 	void Navigation(fvec sample);
 	void ResetPositiveClass();
@@ -261,6 +270,11 @@ private slots:
     void ManualSelectionInvert();
     void ManualSelectionRemove();
     void ManualSelectionRandom();
+    void InputDimensionsUpdated();
+    void InputDimensionsChanged();
+    void InputDimensionsClear();
+    void InputDimensionsInvert();
+    void InputDimensionsRandom();
     void TargetButton();
 	void GaussianButton();
 	void GradientButton();

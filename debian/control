@@ -2,10 +2,8 @@ Source: mldemos
 Section: science
 Priority: optional
 Maintainer: Barak A. Pearlmutter <bap@debian.org>
-Build-Depends: debhelper (>= 8),
-	       libopencv-dev | libcv-dev,
-	       libopencv-dev | libcvaux-dev,
-	       libopencv-dev | libhighgui-dev,
+Build-Depends: debhelper (>= 9),
+	       libcv-dev (>= 2.2),
 	       libqt4-dev
 Standards-Version: 3.9.2
 Homepage: http://mldemos.epfl.ch

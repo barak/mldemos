@@ -6,10 +6,10 @@ Set directory to scan for plugins subdirectory containing plugins to
 system directory in which the plugins subdirectory is installed.
 ---
  MLDemos/mldemos.cpp |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MLDemos/mldemos.cpp b/MLDemos/mldemos.cpp
-index d450abb..4021846 100644
+index 166e1b0..b6a291b 100644
 --- a/MLDemos/mldemos.cpp
 +++ b/MLDemos/mldemos.cpp
 @@ -455,7 +455,7 @@ void MLDemos::initDialogs()
@@ -21,4 +21,3 @@ index d450abb..4021846 100644
      QStringList pluginFileNames;
      QDir alternativeDir = pluginsDir;
  
--- 

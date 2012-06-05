@@ -4,13 +4,13 @@ Subject: spelling typo
 
 ---
  _AlgorithmsPlugins/SEDS/SEDS.cpp |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/_AlgorithmsPlugins/SEDS/SEDS.cpp b/_AlgorithmsPlugins/SEDS/SEDS.cpp
-index 4af2867..7d43779 100644
+index 3bf1c83..f40b346 100644
 --- a/_AlgorithmsPlugins/SEDS/SEDS.cpp
 +++ b/_AlgorithmsPlugins/SEDS/SEDS.cpp
-@@ -1591,7 +1591,7 @@ bool SEDS::CheckConstraints(Matrix * A){
+@@ -1592,7 +1592,7 @@ bool SEDS::CheckConstraints(Matrix * A){
      }
  
      if (nCtrViolated == 0)
@@ -19,4 +19,3 @@ index 4af2867..7d43779 100644
      else{
          QMessageBox *qmes = new QMessageBox ();
          qmes->addButton("Ok",QMessageBox::AcceptRole);
--- 

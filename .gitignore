@@ -9,6 +9,7 @@ last-data.txt
 pluginsDebug/*
 plugins/*
 mldemos
+*.a
 
 # osx noise
 .DS_Store

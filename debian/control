@@ -5,9 +5,9 @@ Maintainer: Barak A. Pearlmutter <bap@debian.org>
 Build-Depends: debhelper (>= 9),
 	       libcv-dev (>= 2.2),
 	       libqt4-dev
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Homepage: http://mldemos.epfl.ch
-Vcs-Git: git://git.debian.org/collab-maint/mldemos.git
+Vcs-Git: git://git.debian.org/git/collab-maint/mldemos.git
 Vcs-Browser: http://git.debian.org/?p=collab-maint/mldemos.git;a=summary
 
 Package: mldemos

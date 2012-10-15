@@ -8,6 +8,11 @@
 #include <nlopt/nlopt.hpp>
 using namespace MathLib;
 
+#define USEQT
+#ifdef USEQT
+#include <QtGui>
+#endif
+
 struct options{  //A struct containing all passed options by user
     double tol_mat_bias;// = 10^-18;  //constant added to diagonal of covarince to avoid numerical instability
 	double tol_stopping;//=10^-10; //threshold rate of change for optimum
@@ -18,6 +23,7 @@ struct options{  //A struct containing all passed options by user
     bool sigma_x_opt;// = 1; //estimate Sigma:1 do not estimate Sigma:0
     bool objective; //determines if MSE or likelihood is to be used =false for mean square error and =true for likelihood
     bool constraintCriterion; //determines if eigenvalue or principal minor is to be used =false for eigenvalue and =true for principal minor
+    nlopt::algorithm optimizationType; // determines the algorithm used for objective minimization under constraints (NLopt algorithm)
     bool display; //print output?
     double eps_margin; //the safety margin in which the criterion should be satisfied
     int SEDS_Ver; //the SEDS version to use
@@ -30,8 +36,14 @@ public:
     int nData,d,K; //nData=number of datapoints, d=dimension ,K=number of Gaussian components
     int nPar, nCtr;
     Matrix C_Lyapunov;
+    std::vector<float> endpoint; // offset to allow non-origin-centered end points
 
     std::vector<float> displayData;
+
+#ifdef USEQT
+    QLabel *displayLabel;
+    void PaintData(std::vector<float> data);
+#endif
 
     options Options;
     //constructor

@@ -48,7 +48,8 @@ void ClassProjections::SetParams(Classifier *classifier)
         int kernelType = params->kernelTypeCombo->currentIndex();
         float kernelWidth = params->kernelWidthSpin->value();
         int kernelDegree = params->kernelDegSpin->value();
-        ((ClassifierKPCA *)classifier)->SetParams(kernelType, kernelDegree, kernelWidth);
+        float kernelOffset = (kernelType == 3) ? params->kernelDegSpin->value() : params->kernelWidthSpin->value();
+        ((ClassifierKPCA *)classifier)->SetParams(kernelType, kernelDegree, kernelWidth, kernelOffset);
     }
 }
 
@@ -59,22 +60,18 @@ QString ClassProjections::GetAlgoString()
     {
     case 0:
         return "PCA";
-        break;
     case 1:
         return "LDA";
-        break;
     case 2:
         return "Fisher-LDA";
-        break;
     case 3:
         return "ICA";
-        break;
     case 4:
         return "Kernel PCA";
-        break;
     case 5:
         return "Naive Bayes";
-        break;
+    default:
+        return "None";
     }
 }
 
@@ -96,6 +93,7 @@ void ClassProjections::DrawInfo(Canvas *canvas, QPainter &painter, Classifier *c
 {
     if(!canvas || !classifier) return;
     if(!this->canvas) this->canvas = canvas;
+    if(canvas->canvasType) return;
     painter.setRenderHint(QPainter::Antialiasing);
     ClassifierLinear *linear = (ClassifierLinear*)classifier;
     //int xIndex = canvas->xIndex, yIndex = canvas->yIndex;
@@ -125,6 +123,7 @@ void ClassProjections::DrawModel(Canvas *canvas, QPainter &painter, Classifier *
 {
     if(!classifier || !canvas) return;
     if(!this->canvas) this->canvas = canvas;
+    if(canvas->canvasType) return;
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     int posClass = 1;

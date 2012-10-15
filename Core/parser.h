@@ -40,6 +40,8 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <vector>
 #include <string>
 #include <types.h>
+#include <QString>
+#include <stdint.h>
 
 using namespace std;
 
@@ -105,7 +107,7 @@ class CSVParser
 public:
     CSVParser();
     void clear();
-    void parse(const char* fileName);
+    void parse(const char* fileName, int separatorType=0);
     vector<size_t> getMissingValIndex();
     void cleanData(unsigned int acceptedTypes);
     pair<vector<fvec>,ivec> getData(ivec excludeIndex = ivec(), int maxSamples=-1);
@@ -117,14 +119,17 @@ public:
     int getCount(){return data.size();}
     vector< vector<string> > getRawData(){return data;}
     static pair<vector<fvec>, ivec> numericFromRawData(vector< vector<string> > rawData);
+    map<int,QString> getClassNames(){return classNames;}
 
 private:
     bool bFirstRowAsHeader;
     int outputLabelColumn;
     ifstream file;
     map<string,unsigned int> classLabels;
+    map<int, QString> classNames;
     vector<vector<string> > data;
     vector<unsigned int> dataTypes;
+    uint8_t getBOMsize(const char* fileName);
 };
 
 #endif // PARSER_H

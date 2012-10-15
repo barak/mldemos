@@ -7,12 +7,11 @@ NAME = mld_Maximizers
 MLPATH =../..
 
 include($$MLPATH/MLDemos_variables.pri)
-#QMAKE_CXXFLAGS += -fopenmp
-#LIBS += -lgomp
 ###########################
 # Source Files            #
 ###########################
-FORMS += paramsMaximizers.ui paramsGA.ui paramsParticles.ui
+FORMS += paramsMaximizers.ui paramsGA.ui paramsParticles.ui \
+    paramsNLopt.ui paramsParticleFilters.ui
 HEADERS +=	\
 			canvas.h \
 			datasetManager.h \
@@ -27,12 +26,15 @@ HEADERS +=	\
 			maximizeGradient.h \
 			maximizeDonut.h \
 			pluginMaximizers.h \
-			interfaceParticles.h \
-			interfaceGA.h \
+            interfaceParticles.h \
+            interfaceParticleFilters.h \
+            interfaceGA.h \
 			gaPeon.h \
 			gaTrainer.h \
 			mvnpdf.h \
-			interfaceBasic.h
+			interfaceBasic.h \
+    maximizeNLopt.h \
+    interfaceNLopt.h
 
 SOURCES += 	\
 			maximizeRandom.cpp \
@@ -45,9 +47,12 @@ SOURCES += 	\
 			pluginMaximizers.cpp \
 			interfaceGA.cpp \
 			interfaceParticles.cpp \
-			gaPeon.cpp \
+            interfaceParticleFilters.cpp \
+            gaPeon.cpp \
 			gaTrainer.cpp \
 			interfaceBasic.cpp \
+    maximizeNLopt.cpp \
+    interfaceNLopt.cpp
 
 ###########################
 # Dependencies            #

@@ -158,10 +158,11 @@ void CSVParser::clear()
     dataTypes.clear();
 }
 
-void CSVParser::parse(const char* fileName)
+void CSVParser::parse(const char* fileName, int separatorType)
 {
     // init
-    file.open(fileName);
+    uint8_t offset = getBOMsize(fileName);
+    file.open(fileName,std::ios_base::binary);
     if(!file.is_open()) return;
 
     std::string separators[] = {",", ";", "\t", " "};
@@ -169,23 +170,28 @@ void CSVParser::parse(const char* fileName)
     int bestSeparator = 0;
     int dim=0;
 
-    // we test the separators to find which one is best
-    for(int i=0; i<separatorCount; i++)
+    if(!separatorType)
     {
-        file.seekg(0);
-        // Parse CSV input file
-        CSVIterator parser(file, separators[i]);
-        ++parser; // we skip the first line as it might be a header line
-        if(parser.eof() || !parser->size()) continue;
-        vector<string> parsed = parser->getParsedLine();
-        //qDebug() << "separator: " << separators[i].c_str() << ":" << parsed.size();
-        if(parsed.size() > dim)
+        // we test the separators to find which one is best
+        for(int i=0; i<separatorCount; i++)
         {
-            dim = parsed.size();
-            bestSeparator = i;
+            file.seekg(offset,ios::beg);
+            // Parse CSV input file
+            CSVIterator parser(file, separators[i]);
+            ++parser; // we skip the first line as it might be a header line
+            if(parser.eof() || !parser->size()) continue;
+            vector<string> parsed = parser->getParsedLine();
+            //qDebug() << "separator: " << separators[i].c_str() << ":" << parsed.size();
+            if(parsed.size() > dim)
+            {
+                dim = parsed.size();
+                bestSeparator = i;
+            }
         }
     }
-    file.seekg(0);
+    else bestSeparator = separatorType-1;
+
+    file.seekg(offset,ios::beg);
 
     data.clear();
     for(CSVIterator parser(file, separators[bestSeparator]);!parser.eof(); ++parser)
@@ -193,11 +199,30 @@ void CSVParser::parse(const char* fileName)
         if(!parser->size()) continue;
         vector<string> parsed = parser->getParsedLine();
         if(!parsed.size()) continue;
+
+        // check for remaining line carrys, *nix only
+        string::size_type pos = 0;
+#if !(defined WIN32 || defined _WIN32)
+        while ( ( pos = parsed.back().find ("\r",pos) ) != string::npos )
+            parsed.back().erase ( pos, 1 );
+#endif
+        // remove null character noise when coming from UTF-X
+        // we assume that the data has only ASCII characters
+        if (offset)
+            for(size_t i = 0; i < parsed.size(); i++)
+            {
+                pos = 0;
+                while ( ( pos = parsed.at(i).find ('\0',pos) ) != string::npos )
+                    parsed.at(i).erase ( pos, 1 );
+
+            }
+
         // Fill dataset
         data.push_back(parsed);
     }
+
     cout << "Parsing done, read " << data.size() << " entries" << endl;
-    cout << "Found " << data.at(0).size()-1 << " input labels" << endl;
+    cout << "Found " << data.at(0).size() << " input labels / columns" << endl;
 
     // look for data types
     for(size_t i = 0; i < data.at(1).size(); i++)
@@ -205,18 +230,30 @@ void CSVParser::parse(const char* fileName)
         // Look for a non-empty cell
         // start with 2nd row as first might be input labels
         size_t testRow = 1;
-        while(data.at(testRow).at(i) == "?") testRow++;
+        while(data.at(testRow++).at(i) == "?" && testRow != data.size());
 
-        // The whole column is missing data...
+
         if (testRow == data.size())
         {
-            cout << "WebImport: Warning: Found empty column" << endl;
-            // TODO delete it
-        }
+            // if the whole column is missing data... delete it
+            cout << "Warning: Found empty column, deleting..." << endl;
+            for (size_t j = 0; j < data.size(); j++)
+                data.at(j).erase(data.at(j).begin()+i);
 
-        // save input types
-        dataTypes.push_back(getType(data.at(testRow).at(i)));
+        } else // save input type
+            dataTypes.push_back(getType(data.at(testRow).at(i)));
     }
+
+    cout << data.at(0).size() << " input labels / columns remaining after cleanup" << endl;
+
+//    cout << "Contents: " << endl;
+//    for (size_t j=0; j<data.size(); j++)
+//    {
+//        cout << "|";
+//        for (size_t i=0; i<data.at(1).size(); i++)
+//            cout << data.at(j).at(i) << "|";
+//        cout << endl;
+//    }
 
     // Read output (class) labels
     getOutputLabelTypes(true);
@@ -291,7 +328,7 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     ivec labels(count);
     int dim = data[0].size();
     if(outputLabelColumn != -1) outputLabelColumn = min(dim-1, outputLabelColumn);
-
+    classNames.clear();
     vector< map<string,int> > labelMaps(dim);
     ivec labelCounters(dim,0);
     pair<map<string,int>::iterator,bool> ret;
@@ -328,6 +365,13 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
         }
     }
 
+    if(labelMaps[outputLabelColumn].size() && outputLabelColumn != -1)
+    {
+        for(map<string,int>::iterator it=labelMaps[outputLabelColumn].begin(); it!=labelMaps[outputLabelColumn].end(); it++)
+        {
+            classNames[it->second] = QString(it->first.c_str());
+        }
+    }
     if(outputLabelColumn == -1)
     {
         FOR(i, data.size())
@@ -423,4 +467,68 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     }
     qDebug() << "Imported samples: " << newSamples.size() << " labels: " << labels.size();
     return pair<vector<fvec>,ivec>(newSamples,labels);
+}
+
+
+uint8_t CSVParser::getBOMsize(const char* fileName)
+{
+    FILE *f = fopen(fileName,"rb");
+    unsigned char bom[16];
+    fread(bom,1,16,f);
+
+    if        (bom[0] == 0x00  && bom[1]  == 0x00 &&
+               bom[2] == 0xFE  && bom[3]  == 0xFF) {
+        cout << "Detected UTF-32 (BE) encoding" << endl;
+        return 4;
+    } else if (bom[0]  == 0xFF && bom[1]  == 0xFE &&
+               bom[2]  == 0x00 && bom[3]  == 0x00) {
+        cout << "Detected UTF-32 (LE) encoding" << endl;
+        return 4;
+    } else if (bom[0]  == 0xFE && bom[1]  == 0xFF) {
+        cout << "Detected UTF-16 (BE) encoding" << endl;
+        return 2;
+    } else if (bom[0]  == 0xFF && bom[1]  == 0xFE) {
+        cout << "Detected UTF-16 (LE) encoding" << endl;
+        return 2;
+    } else if (bom[0]  == 0xEF && bom[1]  == 0xBB &&
+               bom[2]  == 0xBF)                  {
+        cout << "Detected UTF-8 encoding" << endl;
+        return 3;
+    } else if (bom[0]  == 0x2B && bom[1]  == 0x2F &&
+               bom[2]  == 0x76 && bom[3]  == 0x38 &&
+
+               bom[4]  == 0x2B && bom[5]  == 0x2F &&
+               bom[6]  == 0x76 && bom[7]  == 0x39 &&
+
+               bom[8]  == 0x2B && bom[9]  == 0x2F &&
+               bom[10] == 0x76 && bom[11] == 0x2B &&
+
+               bom[12] == 0x2B && bom[13] == 0x2F &&
+               bom[14] == 0x76 && bom[15] == 0x2F) {
+        cout << "Detected UTF-7 encoding" << endl;
+        return 16;
+    } else if (bom[0]  == 0xF7 && bom[1]  == 0x64 &&
+               bom[2]  == 0x4C)                  {
+        cout << "Detected UTF-1 encoding" << endl;
+        return 3;
+    } else if (bom[0]  == 0xDD && bom[1]  == 0x73 &&
+               bom[2]  == 0x66 && bom[3]  == 0x73) {
+        cout << "Detected UTF-EBCDIC encoding" << endl;
+        return 4;
+    } else if (bom[0]  == 0x0E && bom[1]  == 0xFE &&
+               bom[2]  == 0xFF)                  {
+        cout << "Detected SCSU encoding" << endl;
+        return 3;
+    } else if (bom[0]  == 0xFB && bom[1]  == 0xEE &&
+               bom[2]  == 0x28)                  {
+        cout << "Detected BOCU-1 encoding" << endl;
+        return 3;
+    } else if (bom[0]  == 0x84 && bom[1]  == 0x31 &&
+               bom[2]  == 0x95 && bom[3]  == 0x33) {
+        cout << "Detected GB-18030 encoding" << endl;
+        return 4;
+    } else {
+        cout << "No BOM detected, possibly pure ASCII or UTF-8" << endl;
+        return 0;
+    }
 }

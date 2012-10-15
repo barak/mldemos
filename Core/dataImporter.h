@@ -6,6 +6,9 @@
 #include <QFileDialog>
 #include <QTableView>
 #include <QDebug>
+#include <QMessageBox>
+
+#define IMPORT_WARNING_THRESHOLD 2000
 
 namespace Ui {
     class DataImporterDialog;
@@ -20,7 +23,8 @@ public:
 	const char* QueryRegressorSignal() {return SIGNAL(QueryRegressor(std::vector<fvec>));}
 	const char* QueryDynamicalSignal() {return SIGNAL(QueryDynamical(std::vector<fvec>));}
 	const char* QueryClustererSignal() {return SIGNAL(QueryClusterer(std::vector<fvec>));}
-	const char* QueryMaximizerSignal() {return SIGNAL(QueryMaximizer(std::vector<fvec>));}
+    const char* QueryMaximizerSignal() {return SIGNAL(QueryMaximizer(std::vector<fvec>));}
+    const char* QueryReinforcementSignal() {return SIGNAL(QueryReinforcement(std::vector<fvec>));}
     const char* SetDataSignal() {return SIGNAL(SetData(std::vector<fvec>, ivec, std::vector<ipair>, bool));}
 	const char* SetTimeseriesSignal() {return SIGNAL(SetTimeseries(std::vector<TimeSerie>));}
 	const char* FetchResultsSlot() {return SLOT(FetchResults(std::vector<fvec>));}
@@ -31,15 +35,16 @@ public:
 	void Start();
 	void Stop();
     QStringList GetHeaders(){return headers;}
-
     DataImporter();
     ~DataImporter();
 
 private:
+    QString filename;
     Ui::DataImporterDialog *gui;
 	QDialog *guiDialog;
     CSVParser *inputParser;
     QStringList headers;
+    std::map<int, QString> classNames;
 
     bool saveFile(const QString &filename, QIODevice *data);
 
@@ -48,13 +53,15 @@ signals:
     void SetData(std::vector<fvec> samples, ivec labels, std::vector<ipair> trajectories, bool bProjected);
 	void SetTimeseries(std::vector<TimeSerie> series);
     void SetDimensionNames(QStringList headers);
+    void SetClassNames(std::map<int, QString> classNames);
 	void QueryClassifier(std::vector<fvec> samples);
-	void QueryRegressor(std::vector<fvec> samples);
-	void QueryDynamical(std::vector<fvec> samples);
+    void QueryRegressor(std::vector<fvec> samples);
+    void QueryDynamical(std::vector<fvec> samples);
 	void QueryClusterer(std::vector<fvec> samples);
 	void QueryMaximizer(std::vector<fvec> samples);
+    void QueryReinforcement(std::vector<fvec> samples);
 public slots:
-	void FetchResults(std::vector<fvec> results);
+    void FetchResults(std::vector<fvec> results);
 	void Closing();
     void Parse(QString filename);
 	void LoadFile();
@@ -63,6 +70,9 @@ private slots:
     void classIgnoreChanged();
     void headerChanged();
     void classColumnChanged(int value);
+    void separatorChanged();
+    void on_importLimitSpin_valueChanged(int arg1);
+    void on_importLimitCombo_currentIndexChanged(int index);
 };
 
 #endif // _DATA_IMPORTER_H_

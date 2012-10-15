@@ -3,17 +3,35 @@
 #include <QDebug>
 
 PCAProjection::PCAProjection()
-    : widget(new QWidget())
+    : widget(new QWidget()), eigenWidget(0)
 {
     params = new Ui::paramsPCA();
     params->setupUi(widget);
+    connect(params->showEigenvectorButton, SIGNAL(clicked()), this, SLOT(ShowEigenVectors()));
+    connect(params->useRangeCheck, SIGNAL(clicked()), this, SLOT(ChangeOptions()));
+    ChangeOptions();
 }
 
+void PCAProjection::ChangeOptions()
+{
+    bool bRange = params->useRangeCheck->isChecked();
+    params->startRangeSpin->setVisible(bRange);
+    params->stopRangeSpin->setVisible(bRange);
+    params->labelStart->setVisible(bRange);
+    params->labelStop->setVisible(bRange);
+}
 
 // virtual functions to manage the algorithm creation
 Projector *PCAProjection::GetProjector()
 {
     return new ProjectorPCA();
+}
+
+void PCAProjection::ShowEigenVectors()
+{
+    if(!eigenWidget) return;
+    if(eigenWidget->isVisible()) eigenWidget->hide();
+    else eigenWidget->show();
 }
 
 void PCAProjection::DrawInfo(Canvas *canvas, QPainter &painter, Projector *projector)
@@ -44,13 +62,47 @@ void PCAProjection::DrawInfo(Canvas *canvas, QPainter &painter, Projector *proje
             accumulator += eigval / maxEigVal;
         }
         else eigval = 0;
-        params->eigenList->addItem(QString("e%1 %2 %3%%").arg(i).arg(eigval, 0, 'f', 2).arg(accumulator*100, 0, 'f', 1));
+        params->eigenList->addItem(QString("%1: %2 %3%%").arg(i+1).arg(eigval, 0, 'f', 2).arg(eigval/maxEigVal*100, 0, 'f', 1));
     }
+    vector<fvec> eigenVec = pca->GetEigenVectors();
+    int dim = eigenVec.size();
+    int eigenCount = eigenVec.size() ? eigenVec[0].size() : 2;
+    if(!eigenWidget)
+    {
+        eigenWidget = new QWidget();
+        QBoxLayout *layout = new QBoxLayout(QBoxLayout::LeftToRight, eigenWidget);
+        eigenWidget->setWindowTitle("PCA EigenVectors");
+        eigenTable = new QTableWidget(eigenCount, dim);
+        layout->addWidget(eigenTable);
+    }
+    else
+    {
+        eigenTable->setColumnCount(dim);
+        eigenTable->setRowCount(eigenCount);
+    }
+    FOR(i, dim)
+    {
+        if(i >= eigenVec.size()) break;
+        FOR(j, eigenCount)
+        {
+            if(j >= eigenVec[i].size()) break;
+            QTableWidgetItem *item = new QTableWidgetItem(QString("%1").arg(eigenVec[i][j], 0, 'f', 4));
+            eigenTable->setItem(j,i, item);
+        }
+    }
+    QStringList labels;
+    FOR(i, dim)
+    {
+        labels << QString("e%1: %2").arg(i+1).arg(values[i], 0, 'f', 3);
+    }
+    eigenTable->setHorizontalHeaderLabels(labels);
 }
 
 void PCAProjection::DrawModel(Canvas *canvas, QPainter &painter, Projector *projector)
 {
     if(!canvas || !projector) return;
+    /*
+    if(canvas->canvasType) return;
     vector<fvec> samples = projector->source;
     vector<fvec> projected = projector->projected;
     if(!projected.size() || !samples.size()) return;
@@ -76,6 +128,7 @@ void PCAProjection::DrawModel(Canvas *canvas, QPainter &painter, Projector *proj
         QPointF p1 = canvas->toCanvasCoords(samples[i]);
         painter.drawEllipse(p1, 5, 5);
     }
+    */
 }
 
 // virtual functions to manage the GUI and I/O

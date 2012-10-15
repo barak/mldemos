@@ -92,7 +92,7 @@
          </item>
          <item>
           <property name="text">
-           <string>Parallel Coordinates</string>
+           <string>Parallel Coords</string>
           </property>
          </item>
          <item>
@@ -176,21 +176,6 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="5">
-           <widget class="QSpinBox" name="canvasX3Spin">
-            <property name="font">
-             <font>
-              <pointsize>10</pointsize>
-             </font>
-            </property>
-            <property name="minimum">
-             <number>0</number>
-            </property>
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="canvasX1Label">
             <property name="font">
@@ -233,6 +218,21 @@
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="5">
+           <widget class="QSpinBox" name="canvasX3Spin">
+            <property name="font">
+             <font>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>0</number>
             </property>
            </widget>
           </item>
@@ -315,8 +315,10 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
+    <addaction name="actionGenerate_Data"/>
     <addaction name="actionClearModel"/>
     <addaction name="actionClearData"/>
+    <addaction name="actionShift_Dimensions"/>
     <addaction name="separator"/>
     <addaction name="menuDisplay_Options"/>
    </widget>
@@ -448,10 +450,13 @@
   </action>
   <action name="actionExportOutput">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Output Data</string>
+   </property>
+   <property name="toolTip">
+    <string>Export algorithm output for current samples</string>
    </property>
    <property name="statusTip">
     <string>Export algorithm output for current samples</string>
@@ -516,6 +521,19 @@
   <action name="actionImportData">
    <property name="text">
     <string>Data (csv, txt)</string>
+   </property>
+  </action>
+  <action name="actionShift_Dimensions">
+   <property name="text">
+    <string>Shift Dimensions</string>
+   </property>
+   <property name="toolTip">
+    <string>Shift dimensions by one dimension to the right</string>
+   </property>
+  </action>
+  <action name="actionGenerate_Data">
+   <property name="text">
+    <string>Generate Data</string>
    </property>
   </action>
  </widget>

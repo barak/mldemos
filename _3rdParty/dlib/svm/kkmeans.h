@@ -128,6 +128,20 @@ namespace dlib
             return label;
         }
 
+        scalar_type getDistance (const sample_type& sample, int centerNumber)
+        {
+            if(centerNumber < 0 || centerNumber > centers.size()) return 0;
+            return (*centers[centerNumber])(sample);
+        }
+
+        /*
+        std::vector<scalar_type> getAlphas(int centerNumber)
+        {
+            if(centerNumber < 0 || centerNumber > centers.size()) return;
+            (*centers[centerNumber]).alpha;
+        }
+        */
+
         void set_min_change (
             scalar_type min_change_
         )
@@ -266,8 +280,6 @@ namespace dlib
                 }
 
             }
-
-
         }
 
         typename array<scoped_ptr<kcentroid<kernel_type> > >::expand_1b_c centers;
@@ -316,7 +328,7 @@ namespace dlib
 
 
         // make sure requires clause is not broken
-        DLIB_ASSERT(num_centers > 1 && 0 <= percentile && percentile < 1 && samples.size() > 1,
+        DLIB_ASSERT(num_centers >= 1 && 0 <= percentile && percentile < 1 && samples.size() > 1,
             "\tvoid pick_initial_centers()"
             << "\n\tYou passed invalid arguments to this function"
             << "\n\tnum_centers: " << num_centers 

@@ -10,57 +10,56 @@ include($$MLPATH/MLDemos_variables.pri)
 ###########################
 # Source Files            #
 ###########################
-FORMS += paramsSVM.ui paramsSVMcluster.ui paramsSVMregr.ui paramsSVMdynamic.ui paramsGPR.ui paramsGPRdynamic.ui paramsKKM.ui
+FORMS += paramsSVM.ui paramsSVMcluster.ui paramsSVMregr.ui paramsSVMdynamic.ui paramsKM.ui paramsMVM.ui paramsRVM.ui paramsRVMregr.ui
 HEADERS +=	\
 			canvas.h \
 			datasetManager.h \
 			mymaths.h \
 			svm.h \
-			SOGP.h \
-			SOGP_aux.h \
-			classifierSVM.h \
-			classifierRVM.h \
+            classifierSVM.h \
+            classifierMVM.h \
+            classifierRVM.h \
 			classifierPegasos.h \
 			clustererKKM.h \
-			clustererSVR.h \
+            clustererKM.h \
+            kmeans.h \
+            clustererSVR.h \
 			regressorSVR.h \
-			regressorGPR.h \
 			regressorRVM.h \
 			regressorKRLS.h \
 			dynamicalSVR.h \
-			dynamicalGPR.h \
-			interfaceSVMClassifier.h \
-			interfaceSVMCluster.h \
+            interfaceMVM.h \
+            interfaceSVMClassifier.h \
+            interfaceSVMCluster.h \
 			interfaceSVMRegress.h \
 			interfaceSVMDynamic.h \
-                        interfaceGPRRegress.h \
-                        interfaceGPRDynamic.h \
-                        interfaceKKM.h \
-                        pluginKernel.h
-
+            interfaceRVMClassifier.h \
+            interfaceRVMRegress.h \
+            interfaceKMCluster.h \
+            pluginKernel.h
 SOURCES += 	\
 			svm.cpp \
-			SOGP.cpp \
-			SOGP_aux.cpp \
-			classifierSVM.cpp \
-                        classifierRVM.cpp \
+            classifierSVM.cpp \
+            classifierMVM.cpp \
+            classifierRVM.cpp \
 			classifierPegasos.cpp \
 			clustererKKM.cpp \
-			clustererSVR.cpp \
+            clustererKM.cpp \
+            kmeans.cpp \
+            clustererSVR.cpp \
 			regressorSVR.cpp \
-			regressorGPR.cpp \
 			regressorRVM.cpp \
 			regressorKRLS.cpp \
 			dynamicalSVR.cpp \
-			dynamicalGPR.cpp \
-			interfaceSVMClassifier.cpp \
-			interfaceSVMCluster.cpp \
-                        interfaceSVMRegress.cpp \
-                        interfaceSVMDynamic.cpp \
-                        interfaceGPRRegress.cpp \
-                        interfaceGPRDynamic.cpp \
-                        interfaceKKM.cpp \
-                        pluginKernel.cpp
+            interfaceMVM.cpp \
+            interfaceSVMClassifier.cpp \
+            interfaceSVMCluster.cpp \
+            interfaceSVMRegress.cpp \
+            interfaceSVMDynamic.cpp \
+            interfaceRVMClassifier.cpp \
+            interfaceRVMRegress.cpp \
+            interfaceKMCluster.cpp \
+            pluginKernel.cpp
 
 ###########################
 # Dependencies            #

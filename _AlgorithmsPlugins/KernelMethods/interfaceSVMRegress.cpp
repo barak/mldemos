@@ -29,6 +29,7 @@ RegrSVM::RegrSVM()
     params->setupUi(widget = new QWidget());
     connect(params->svmTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(ChangeOptions()));
     connect(params->kernelTypeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(ChangeOptions()));
+    ChangeOptions();
 }
 
 void RegrSVM::ChangeOptions()
@@ -40,20 +41,20 @@ void RegrSVM::ChangeOptions()
     params->svmCSpin->setEnabled(true);
     params->svmCSpin->setRange(0.1, 9999.9);
     params->svmCSpin->setDecimals(1);
+    params->optimizeCheck->setVisible(true);
     switch(params->svmTypeCombo->currentIndex())
     {
     case 0: // C-SVM
         params->svmEpsLabel->setText("eps");
         params->svmPSpin->setRange(0.0001, 100.0);
+        if(params->kernelTypeCombo->count() < 4) params->kernelTypeCombo->addItem("Sigmoid");
         break;
     case 1: // Nu-SVM
         params->svmEpsLabel->setText("Nu");
+        if(params->kernelTypeCombo->count() < 4) params->kernelTypeCombo->addItem("Sigmoid");
         break;
-    case 2: // RVM
-        params->svmCSpin->setEnabled(false);
-        params->svmEpsLabel->setText("eps");
-        break;
-    case 3:
+    case 2: // KRLS
+        params->optimizeCheck->setVisible(false);
         params->svmEpsLabel->setText("Tolerance");
         params->svmCLabel->setText("Capacity");
         params->svmCSpin->setRange(0, 1000);
@@ -61,25 +62,34 @@ void RegrSVM::ChangeOptions()
         params->svmPSpin->setRange(0.0001, 1.0);
         params->svmPSpin->setSingleStep(0.001);
         params->svmPSpin->setDecimals(4);
+        if(params->kernelTypeCombo->count() > 3) params->kernelTypeCombo->removeItem(3);
         break;
     }
     switch(params->kernelTypeCombo->currentIndex())
     {
     case 0: // linear
-        params->kernelDegSpin->setEnabled(false);
         params->kernelDegSpin->setVisible(false);
+        params->labelDegree->setVisible(false);
+        params->kernelWidthSpin->setVisible(false);
+        params->labelWidth->setVisible(false);
         break;
     case 1: // poly
-        params->kernelDegSpin->setEnabled(true);
         params->kernelDegSpin->setVisible(true);
-        params->kernelWidthSpin->setEnabled(false);
+        params->labelDegree->setVisible(true);
         params->kernelWidthSpin->setVisible(false);
+        params->labelWidth->setVisible(false);
         break;
     case 2: // RBF
-        params->kernelDegSpin->setEnabled(false);
         params->kernelDegSpin->setVisible(false);
-        params->kernelWidthSpin->setEnabled(true);
+        params->labelDegree->setVisible(false);
         params->kernelWidthSpin->setVisible(true);
+        params->labelWidth->setVisible(true);
+        break;
+    case 3: // SIGMOID
+        params->kernelDegSpin->setEnabled(false);
+        params->labelDegree->setVisible(false);
+        params->kernelWidthSpin->setEnabled(true);
+        params->labelWidth->setVisible(true);
         break;
     }
 }
@@ -93,13 +103,9 @@ void RegrSVM::SetParams(Regressor *regressor)
     float kernelGamma = params->kernelWidthSpin->value();
     float kernelDegree = params->kernelDegSpin->value();
     float svmP = params->svmPSpin->value();
+    bool bOptimize = params->optimizeCheck->isChecked();
 
-    if(kernelMethod == 2) // rvm
-    {
-        RegressorRVM *rvm = (RegressorRVM*)regressor;
-        rvm->SetParams(svmP, kernelType, kernelGamma, kernelDegree);
-    }
-    else if(kernelMethod == 3 ) // KRLS
+    if(kernelMethod == 2) // KRLS
     {
         RegressorKRLS *krls = (RegressorKRLS*)regressor;
         int capacity = svmC;
@@ -125,16 +131,24 @@ void RegrSVM::SetParams(Regressor *regressor)
             break;
         case 1:
             svm->param.kernel_type = POLY;
+            svm->param.gamma = 1;
             break;
         case 2:
             svm->param.kernel_type = RBF;
+            svm->param.gamma = 1 / kernelGamma;
+            break;
+        case 3:
+            svm->param.kernel_type = SIGMOID;
+            svm->param.gamma = 1 / kernelGamma;
+            svm->param.coef0 = 0;
             break;
         }
         svm->param.C = svmC;
         svm->param.nu = svmP;
         svm->param.p = svmP;
-        svm->param.gamma = 1 / kernelGamma;
         svm->param.degree = kernelDegree;
+        svm->param.coef0 = 0;
+        svm->bOptimize = bOptimize;
     }
 }
 
@@ -159,10 +173,6 @@ QString RegrSVM::GetAlgoString()
         algo += QString(" %1 %2").arg(svmC).arg(svmP);
         break;
     case 2:
-        algo += "RVM";
-        algo += QString(" %1").arg(svmP);
-        break;
-    case 3:
         algo += "KRLS";
         algo += QString(" %1 %2").arg(svmC).arg(svmP);
         break;
@@ -178,6 +188,9 @@ QString RegrSVM::GetAlgoString()
     case 2:
         algo += QString(" R %1").arg(kernelGamma);
         break;
+    case 3:
+        algo += QString(" Sig %1").arg(kernelGamma);
+        break;
     }
     return algo;
 }
@@ -189,9 +202,6 @@ Regressor *RegrSVM::GetRegressor()
     switch(svmType)
     {
     case 2:
-        regressor = new RegressorRVM();
-        break;
-    case 3:
         regressor = new RegressorKRLS();
         break;
     default:
@@ -207,11 +217,9 @@ void RegrSVM::DrawInfo(Canvas *canvas, QPainter &painter, Regressor *regressor)
     painter.setRenderHint(QPainter::Antialiasing);
     int xIndex = canvas->xIndex;
     int yIndex = canvas->yIndex;
-    if(regressor->type == REGR_RVM || regressor->type == REGR_KRLS)
+    if(regressor->type == REGR_KRLS)
     {
-        vector<fvec> sv = (regressor->type == REGR_KRLS) ?
-                    ((RegressorKRLS*)regressor)->GetSVs() :
-                    ((RegressorRVM*)regressor)->GetSVs();
+        vector<fvec> sv = ((RegressorKRLS*)regressor)->GetSVs();
         int radius = 9;
         painter.setBrush(Qt::NoBrush);
         FOR(i, sv.size())
@@ -230,6 +238,7 @@ void RegrSVM::DrawInfo(Canvas *canvas, QPainter &painter, Regressor *regressor)
         if(svm)
         {
             painter.setBrush(Qt::NoBrush);
+            painter.setPen(QPen(Qt::black, 4));
             std::vector<fvec> samples = canvas->data->GetSamples();
             int dim = canvas->data->GetDimCount();
             fvec sv(2,0);
@@ -244,20 +253,9 @@ void RegrSVM::DrawInfo(Canvas *canvas, QPainter &painter, Regressor *regressor)
                         break;
                     }
                 }
-                int radius = 7;
+                int radius = 9;
                 QPointF point = canvas->toCanvasCoords(sv[0],sv[1]);
-                if(abs((*svm->sv_coef)[i]) == svm->param.C)
-                {
-                    painter.setPen(QPen(Qt::black, 4));
-                    painter.drawEllipse(point, radius, radius);
-                    painter.setPen(Qt::white);
-                    painter.drawEllipse(point, radius, radius);
-                }
-                else
-                {
-                    painter.setPen(Qt::black);
-                    painter.drawEllipse(point, radius, radius);
-                }
+                painter.drawEllipse(point, radius, radius);
             }
         }
     }
@@ -277,11 +275,11 @@ void RegrSVM::DrawModel(Canvas *canvas, QPainter &painter, Regressor *regressor)
     fvec sample = canvas->toSampleCoords(0,0);
     int dim = sample.size();
     if(dim > 2) return;
-    if(regressor->type == REGR_KRLS || regressor->type == REGR_RVM)
+    if(regressor->type == REGR_KRLS)
     {
         canvas->maps.confidence = QPixmap();
         int steps = w;
-        QPointF oldPoint(-FLT_MAX,-FLT_MAX);
+        QPainterPath path;
         FOR(x, steps)
         {
             sample = canvas->toSampleCoords(x,0);
@@ -290,14 +288,12 @@ void RegrSVM::DrawModel(Canvas *canvas, QPainter &painter, Regressor *regressor)
             QPointF point = canvas->toCanvasCoords(sample[xIndex], res[0]);
             if(x)
             {
-                painter.setPen(QPen(Qt::black, 1));
-                painter.drawLine(point, oldPoint);
-                painter.setPen(QPen(Qt::black, 0.5));
-                //				painter.drawLine(point+QPointF(0,eps*h), oldPoint+QPointF(0,eps*h));
-                //				painter.drawLine(point-QPointF(0,eps*h), oldPoint-QPointF(0,eps*h));
+                path.lineTo(point);
             }
-            oldPoint = point;
+            else path.moveTo(point);
         }
+        painter.setPen(QPen(Qt::black, 1));
+        painter.drawPath(path);
     }
     else if(regressor->type == REGR_SVR)
     {
@@ -309,24 +305,31 @@ void RegrSVM::DrawModel(Canvas *canvas, QPainter &painter, Regressor *regressor)
         eps = fabs((canvas->toCanvasCoords(eps,0) - canvas->toCanvasCoords(0,0)).x());
 
         int steps = w;
-        QPointF oldPoint(-FLT_MAX,-FLT_MAX);
+        QPainterPath path, pathUp, pathDown;
         FOR(x, steps)
         {
             sample = canvas->toSampleCoords(x,0);
-            int dim = sample.size();
             fvec res = regressor->Test(sample);
             if(res[0] != res[0]) continue;
             QPointF point = canvas->toCanvasCoords(sample[xIndex], res[0]);
             if(x)
             {
-                painter.setPen(QPen(Qt::black, 1));
-                painter.drawLine(point, oldPoint);
-                painter.setPen(QPen(Qt::black, 0.5));
-                painter.drawLine(point+QPointF(0,eps), oldPoint+QPointF(0,eps));
-                painter.drawLine(point-QPointF(0,eps), oldPoint-QPointF(0,eps));
+                path.lineTo(point);
+                pathUp.lineTo(point + QPointF(0, eps));
+                pathDown.lineTo(point - QPointF(0, eps));
             }
-            oldPoint = point;
+            else
+            {
+                path.moveTo(point);
+                pathUp.moveTo(point + QPointF(0, eps));
+                pathDown.moveTo(point - QPointF(0, eps));
+            }
         }
+        painter.setPen(QPen(Qt::black, 1));
+        painter.drawPath(path);
+        painter.setPen(QPen(Qt::black, 0.5));
+        painter.drawPath(pathUp);
+        painter.drawPath(pathDown);
     }
 }
 
@@ -338,6 +341,7 @@ void RegrSVM::SaveOptions(QSettings &settings)
     settings.setValue("svmC", params->svmCSpin->value());
     settings.setValue("svmP", params->svmPSpin->value());
     settings.setValue("svmType", params->svmTypeCombo->currentIndex());
+    settings.setValue("optimizeCheck", params->optimizeCheck->isChecked());
 }
 
 bool RegrSVM::LoadOptions(QSettings &settings)
@@ -348,6 +352,7 @@ bool RegrSVM::LoadOptions(QSettings &settings)
     if(settings.contains("svmC")) params->svmCSpin->setValue(settings.value("svmC").toFloat());
     if(settings.contains("svmP")) params->svmPSpin->setValue(settings.value("svmP").toFloat());
     if(settings.contains("svmType")) params->svmTypeCombo->setCurrentIndex(settings.value("svmType").toInt());
+    if(settings.contains("optimizeCheck")) params->optimizeCheck->setChecked(settings.value("optimizeCheck").toBool());
     ChangeOptions();
     return true;
 }
@@ -360,6 +365,7 @@ void RegrSVM::SaveParams(QTextStream &file)
     file << "regressionOptions" << ":" << "svmC" << " " << params->svmCSpin->value() << "\n";
     file << "regressionOptions" << ":" << "svmP" << " " << params->svmPSpin->value() << "\n";
     file << "regressionOptions" << ":" << "svmType" << " " << params->svmTypeCombo->currentIndex() << "\n";
+    file << "regressionOptions" << ":" << "optimizeCheck" << " " << params->optimizeCheck->isChecked() << "\n";
 }
 
 bool RegrSVM::LoadParams(QString name, float value)
@@ -370,6 +376,7 @@ bool RegrSVM::LoadParams(QString name, float value)
     if(name.endsWith("svmC")) params->svmCSpin->setValue(value);
     if(name.endsWith("svmP")) params->svmPSpin->setValue(value);
     if(name.endsWith("svmType")) params->svmTypeCombo->setCurrentIndex((int)value);
+    if(name.endsWith("optimizeCheck")) params->optimizeCheck->setChecked((int)value);
     ChangeOptions();
     return true;
 }

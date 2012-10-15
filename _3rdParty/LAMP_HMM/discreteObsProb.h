@@ -1,3 +1,5 @@
+#ifndef DISCRETEOBSPROB_H
+#define DISCRETEOBSPROB_H
 /* ************************************************************************ *
  * ************************************************************************ *
 
@@ -32,7 +34,7 @@ class CDiscreteObsProb: public CObsProb{
 public:
 	CDiscreteObsProb(int nbSymbols, int nbStates);
 		CDiscreteObsProb(std::ifstream &hmmFile, int nbStates);
-	~CDiscreteObsProb(void);
+    ~CDiscreteObsProb(void);
 	void Start(void);
 	void StartIter(void);
 	void BWSum(double *gamma, CObs *obs);
@@ -43,7 +45,7 @@ public:
 	uChar* FindAverageStateGray(void);
 	CObs** MapStateToObs(void);
 	void Print(std::ostream &outFile);
-	inline double at(int state, CObs *obs){return mThisB[state][((CIntObs*)obs)->Get()];};
+    inline double at(int state, CObs *obs){return mThisB[state][((CIntObs*)obs)->Get()];}
   //	inline double logAt(int state, CObs *obs){return mLogB[state][((CIntObs*)obs)->Get()];};
   //	int GetM(void){return mM;};// see below
 #if 1
@@ -68,3 +70,4 @@ private:
 //===============================================================================
 
 //===============================================================================
+#endif

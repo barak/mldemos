@@ -3,8 +3,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#include <QtGui>
-
 double NLOpt_Compute_J(unsigned nPar, const double *x, double *grad, void *f_data)
 {
     SEDS *seds = (SEDS *) f_data;
@@ -13,8 +11,11 @@ double NLOpt_Compute_J(unsigned nPar, const double *x, double *grad, void *f_dat
     p.Set(x,nPar);
 
     double J = seds->Compute_J(p, dJ);
-    for (int i=0; i<nPar; i++)
-        grad[i] = dJ[i];
+    if(grad)
+    {
+        for (int i=0; i<nPar; i++)
+            grad[i] = dJ[i];
+    }
 
     double J_tmp = 1e20;
     if (seds->displayData.size()>0)
@@ -22,7 +23,10 @@ double NLOpt_Compute_J(unsigned nPar, const double *x, double *grad, void *f_dat
 
     J_tmp = min(J,J_tmp);
     seds->displayData.push_back(J_tmp);
-	//seds->PaintData(seds->displayData);
+#ifdef USEQT
+    // we paint the data
+    seds->PaintData(seds->displayData);
+#endif
 
     return J;
 }
@@ -37,8 +41,11 @@ void NLOpt_Constraint(unsigned nCtr, double *result, unsigned nPar, const double
 
     for (int i=0; i<nCtr; i++){
         result[i] = c[i];
-        for (int j=0; j<nPar; j++)
-            grad[i*nPar+j] = dc(i,j);
+        if(grad)
+        {
+            for (int j=0; j<nPar; j++)
+                grad[i*nPar+j] = dc(i,j);
+        }
     }
 }
 
@@ -58,6 +65,9 @@ SEDS::SEDS()
     Options.SEDS_Ver = 2;
     d = 0;
     nData = 0;
+#ifdef USEQT
+    displayLabel = 0;
+#endif
 }
 
 /* Parsing the input commands to the solver */
@@ -395,7 +405,7 @@ bool SEDS::loadModel(const char fileName[], char type)
 
         file >> d >> K;
 
-//        d /= 2; // correction by Manuel Muehlig
+        //        d /= 2; // correction by Manuel Muehlig
 
         Priors.Resize(K);
         for (int k = 0; k < K; k++)
@@ -414,6 +424,13 @@ bool SEDS::loadModel(const char fileName[], char type)
                 for (int j = 0; j < 2*d; j++)
                     file >> Sigma[k](i,j);
         }
+
+        endpoint.resize(2*d);
+        for (unsigned int i = 0; i < 2*d; i++)
+        {
+            file >> endpoint[i];
+        }
+
         file.close();
     }
 
@@ -468,6 +485,12 @@ bool SEDS::saveModel(const char fileName[])
         }
         file << endl;
     }
+
+    for (unsigned int i = 0; i < 2*d; i++)
+    {
+        file << endpoint[i] << " ";
+    }
+    file << endl;
     file.close();
 
     return true;
@@ -569,18 +592,24 @@ bool SEDS::initialize_value(){
     return true;
 }
 
-/*
-QPixmap pm(320,240);
-QLabel lbl;
+//QPixmap pm(320,240);
+//QLabel lbl;
 void SEDS::PaintData(std::vector<float> data)
 {
+#ifndef USEQT
+    return;
+#else
+    if(!displayLabel) return;
+    int w = displayLabel->width();
+    int h = displayLabel->height();
+    QPixmap pm(w,h);
+    QBitmap bitmap(w,h);
+    pm.setMask(bitmap);
+    pm.fill(Qt::transparent);
     QPainter painter(&pm);
-    painter.fillRect(pm.rect(), Qt::white);
 
-    int w = pm.width();
-    int h = pm.height();
     int cnt = data.size();
-    int pad = 10;
+    int pad = 4;
     QPointF oldPoint;
     double minVal = FLT_MAX;
     double maxVal = -FLT_MAX;
@@ -596,11 +625,15 @@ void SEDS::PaintData(std::vector<float> data)
 
     painter.setBrush(Qt::NoBrush);
     painter.setPen(QPen(QColor(200,200,200), 0.5));
-    int steps = 10;
+    int steps = 3;
     for(int i=0; i<=steps; i++)
     {
-        painter.drawLine(QPoint(0, i/(float)steps*(h-2*pad) + pad), QPoint(w, i/(float)steps*(h-2*pad) + pad));
-        painter.drawLine(QPoint(i/(float)steps*w, 0), QPoint(i/(float)steps*w, h));
+        painter.drawLine(QPoint(0, i/(float)steps*(h-2*pad) + pad), QPoint(w, i/(float)steps*(h-2*pad) + pad)); // horizontal
+    }
+    steps = steps*w/h;
+    for(int i=0; i<=steps; i++)
+    {
+        painter.drawLine(QPoint(i/(float)steps*w, 0), QPoint(i/(float)steps*w, h)); // vertical
     }
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -620,13 +653,16 @@ void SEDS::PaintData(std::vector<float> data)
     painter.setBrush(QColor(255,255,255,200));
     painter.drawRect(QRect(190,5,100,45));
     painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(QPointF(200, 20), QString("J_0: %1").arg(data[0]));
-    painter.drawText(QPointF(200, 40), QString("J_F: %1").arg(data[data.size()-1]));
-    lbl.setPixmap(pm);
-    lbl.show();
+    QFont font = painter.font();
+    font.setPointSize(8);
+    painter.setFont(font);
+    painter.drawText(QPointF(w*2/3, 12), QString("J_0: %1").arg(data[0]));
+    painter.drawText(QPointF(w*2/3, 22), QString("J_F: %1").arg(data[data.size()-1]));
+    displayLabel->setPixmap(pm);
     qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+#endif
 }
-*/
+
 
 /* Running optimization solver to find the optimal values for the model.
  * The result will be saved in the variable p
@@ -656,7 +692,7 @@ bool SEDS::Optimize(){
 
     //-running NLOpt--------------------------------------------------------------------------------------
     //double lb[2] = { -HUGE_VAL, 0 }; // lower bounds
-    nlopt::opt opt(nlopt::LD_MMA, nPar); // algorithm and dimensionality
+    nlopt::opt opt(Options.optimizationType, nPar); // algorithm and dimensionality
     //nlopt_set_lower_bounds(opt, lb);
     opt.set_min_objective(NLOpt_Compute_J, this);
 
@@ -712,6 +748,7 @@ bool SEDS::Optimize(){
     }
 
     CheckConstraints(A);
+    return true;
 }
 
 /* This function computes the sensitivity of Cost function w.r.t. optimization parameters.
@@ -772,7 +809,7 @@ double SEDS::Compute_J(Vector pp, Vector& dJ) //compute the objective function a
             }
             if (Options.perior_opt)
                 dJ[k] = exp(-pp[k])*Priors[k]*sum;
-                /*
+            /*
                 h_tmp[k] = h[k]^(((A[k]*X-Xd_hat)^(Xd_hat-Xd)).SumRow()); //This vector is common in all dJ computation.
                 Thus, I defined it as a variable to save some computation power
                 dJ(k)= h_tmp[k].Sum();	//derivative of priors(k) w.r.t. p(k)
@@ -871,7 +908,7 @@ double SEDS::Compute_J(Vector pp, Vector& dJ) //compute the objective function a
                             REALTYPE *p_h_tmp = h_tmp[k].Array();
                             for (int jj=0; jj<nData; jj++){
                                 sum +=  (*p_h_tmp++) * ((*p_tmp_mat++) * (*p_tmpData++) //derivative w.r.t. Sigma in exponential
-                                                              + (ii == 0)*tmp_dbl); //derivative with respect to det Sigma which is in the numenator
+                                                        + (ii == 0)*tmp_dbl); //derivative with respect to det Sigma which is in the numenator
 
                                 //the above term (i==0) is just to sum temp_dbl once
                             }

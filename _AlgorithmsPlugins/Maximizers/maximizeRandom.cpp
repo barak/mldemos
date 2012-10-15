@@ -45,7 +45,6 @@ void MaximizeRandom::SetParams(float variance)
 
 void MaximizeRandom::Draw(QPainter &painter)
 {
-
 	painter.setPen(QPen(Qt::black, 1.5));
 	painter.setBrush(Qt::NoBrush);
 	FOR(i, visited.size())
@@ -56,7 +55,7 @@ void MaximizeRandom::Draw(QPainter &painter)
 
 	painter.setPen(QPen(Qt::black, 1.5));
 	FOR(i, history.size()-1 )
-	{
+    {
 		QPointF point(history[i][0]*w, history[i][1]*h);
 		QPointF pointNext(history[i+1][0]*w, history[i+1][1]*h);
 
@@ -66,8 +65,8 @@ void MaximizeRandom::Draw(QPainter &painter)
 		painter.drawEllipse(point, 5, 5);
 	}
 	// we draw the current maximum
-	QPointF point(history[history.size()-1][0]*w, history[history.size()-1][1]*h);
-	painter.setBrush(QColor(255*(1-historyValue[history.size()-1]), 255, 255*(1-historyValue[history.size()-1])));
+    QPointF point(history.back()[0]*w, history.back()[1]*h);
+    painter.setBrush(QColor(255*(1.-historyValue.back()), 255, 255*(1.-historyValue.back())));
 	painter.drawEllipse(point, 5, 5);
 
 	if(variance > 0)
@@ -146,7 +145,7 @@ fvec MaximizeRandom::Test(const fVec &sample)
 	return Test((fvec)sample);
 }
 
-char *MaximizeRandom::GetInfoString()
+const char *MaximizeRandom::GetInfoString()
 {
 	char *text = new char[1024];
 	if(variance == 0) sprintf(text, "Random Search");

@@ -40,7 +40,8 @@ struct Pixmaps
 	QPixmap trajectories;
 	QPixmap obstacles;
 	QPixmap timeseries;
-	void clear() {
+    QPixmap animation;
+    void clear() {
 		confidence = QPixmap();
 		reward = QPixmap();
 		model = QPixmap();
@@ -50,7 +51,8 @@ struct Pixmaps
 		trajectories = QPixmap();
 		obstacles = QPixmap();
 		timeseries = QPixmap();
-	}
+        animation = QPixmap();
+    }
 };
 
 class Canvas : public QWidget
@@ -74,26 +76,30 @@ public:
     void DrawSampleColors(QPainter &painter);
 	void DrawTargets(QPainter &painter);
 	void DrawLiveTrajectory(QPainter &painter);
-	void ResetSamples(){drawnSamples = 0; drawnTrajectories = 0; drawnTimeseries = 0;}
+    void DrawLegend(QPainter &painter);
+    void DrawAxes(QPainter &painter);
+    void ResetSamples(){drawnSamples = 0; drawnTrajectories = 0; drawnTimeseries = 0;}
 	void FitToData();
-	void DrawAxes(QPainter &painter);
 	void RedrawAxes();
     void SetCanvasType(int);
 
     void PaintGaussian(QPointF position, double variance);
 	void PaintReward(fvec sample, float radius, float shift);
-	void PaintGradient(QPointF position);
-	bool bDrawing;
+    void PaintGradient(QPointF position);
+    bool bDrawing;
 	QPainterPath DrawObstacle(Obstacle o);
-	fvec center;
+    fvec center;
 	float zoom;
 	fvec zooms;
     fvec mins, maxes;
     int xIndex, yIndex, zIndex;
 	std::vector<fvec> targets;
+    ivec targetAge;
     int canvasType;
     std::vector<QColor> sampleColors;
     QStringList dimNames;
+    std::map<int,QString> classNames;
+    QString GetClassName(int classNumber);
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -121,7 +127,7 @@ public:
 	QImage qimg;
 	QPainterPath crosshair;
 	bool bDisplayMap, bDisplayInfo, bDisplaySingle, bDisplaySamples;
-	bool bDisplayTrajectories, bDisplayLearned, bDisplayGrid, bDisplayTimeSeries;
+    bool bDisplayTrajectories, bDisplayLearned, bDisplayGrid, bDisplayTimeSeries, bDisplayLegend;
 	bool bShowCrosshair, bNewCrosshair;
 	int trajectoryCenterType, trajectoryResampleType, trajectoryResampleCount;
 	QPoint mouse, mouseAnchor;
@@ -159,6 +165,7 @@ public slots:
 	void ResizeEvent();
 	void SetConfidenceMap(QImage image);
 	void SetModelImage(QImage image);
+    void SetAnimationImage(QImage animation);
 
 signals:
 	void DrawCrosshair();
@@ -224,8 +231,8 @@ public:
         //	edge = Qt::white;
         //}
 		//		radius = 10;
-		painter.setBrush(color);
-		painter.setPen(edge);
+        if(painter.brush().color() != color) painter.setBrush(color);
+        if(painter.pen().color() != edge) painter.setPen(edge);
 		painter.drawEllipse(QRectF(x-radius/2.,y-radius/2.,radius,radius));
 
 	}

@@ -35,18 +35,19 @@ private:
 	int kernelType;
 	int kernelDegree;
 	float kernelGamma;
+    float kernelOffset;
 public:
 	std::vector<fvec> Project(std::vector<fvec> samples);
-	std::vector<fvec> GetSamples(){return samples;};
-	std::vector<fvec> GetResults(){return results;};
-	ivec GetLabels(){return labels;};
+    std::vector<fvec> GetSamples(){return samples;}
+    std::vector<fvec> GetResults(){return results;}
+    ivec GetLabels(){return labels;}
 
 	ClassifierKPCA();
 	void Train(std::vector< fvec > samples, ivec labels);
 	float Test(const fvec &sample);
 	float Test(const fVec &sample);
-	char *GetInfoString();
-	void SetParams(int kernelType, int kernelDegree, float kernelGamma);
+    const char *GetInfoString();
+    void SetParams(int kernelType, int kernelDegree, float kernelGamma, float kernelOffset);
 };
 
 #endif // _CLASSIFIER_KPCA_H_

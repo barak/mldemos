@@ -30,16 +30,18 @@ private:
 	svm_node *node;
 public:
 	svm_parameter param;
+    bool bOptimize;
 
 	RegressorSVR();
 	~RegressorSVR();
 	void Train(std::vector< fvec > samples, ivec labels);
 	fvec Test( const fvec &sample);
 	fVec Test(const fVec &sample);
-	char *GetInfoString();
+    void Optimize(svm_problem *problem);
+    const char *GetInfoString();
 
 	void SetParams(int svmType, float svmC, float svmP, u32 kernelType, float kernelParam);
-	svm_model *GetModel(){return svm;};
+    svm_model *GetModel(){return svm;}
 };
 
 #endif // _REGRESSOR_SVR_H_

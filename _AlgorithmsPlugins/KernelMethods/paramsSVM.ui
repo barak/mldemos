@@ -13,11 +13,11 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLabel" name="label_3">
+  <widget class="QLabel" name="labelWidth">
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>20</y>
+     <y>10</y>
      <width>50</width>
      <height>16</height>
     </rect>
@@ -35,7 +35,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>40</y>
+     <y>30</y>
      <width>61</width>
      <height>22</height>
     </rect>
@@ -56,11 +56,11 @@
     <number>2</number>
    </property>
   </widget>
-  <widget class="QLabel" name="label_22">
+  <widget class="QLabel" name="labelMaxSV">
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>80</y>
+     <y>70</y>
      <width>50</width>
      <height>16</height>
     </rect>
@@ -78,7 +78,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>20</y>
+     <y>10</y>
      <width>91</width>
      <height>16</height>
     </rect>
@@ -96,7 +96,7 @@
    <property name="geometry">
     <rect>
      <x>150</x>
-     <y>80</y>
+     <y>70</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -114,7 +114,7 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>100</y>
+     <y>90</y>
      <width>71</width>
      <height>22</height>
     </rect>
@@ -143,11 +143,6 @@ Pegasos: Online trainer for SVM</string>
    </item>
    <item>
     <property name="text">
-     <string>RVM</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
      <string>Pegasos</string>
     </property>
    </item>
@@ -156,7 +151,7 @@ Pegasos: Online trainer for SVM</string>
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>80</y>
+     <y>70</y>
      <width>61</width>
      <height>16</height>
     </rect>
@@ -174,7 +169,7 @@ Pegasos: Online trainer for SVM</string>
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>40</y>
+     <y>30</y>
      <width>71</width>
      <height>22</height>
     </rect>
@@ -194,6 +189,9 @@ RBF and Polynomial only</string>
    <property name="minimum">
     <double>0.001000000000000</double>
    </property>
+   <property name="maximum">
+    <double>9999.000000000000000</double>
+   </property>
    <property name="singleStep">
     <double>0.010000000000000</double>
    </property>
@@ -201,11 +199,11 @@ RBF and Polynomial only</string>
     <double>0.100000000000000</double>
    </property>
   </widget>
-  <widget class="QLabel" name="label_21">
+  <widget class="QLabel" name="labelDegree">
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>20</y>
+     <y>10</y>
      <width>50</width>
      <height>16</height>
     </rect>
@@ -226,7 +224,7 @@ RBF and Polynomial only</string>
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>100</y>
+     <y>90</y>
      <width>41</width>
      <height>22</height>
     </rect>
@@ -254,7 +252,7 @@ RBF and Polynomial only</string>
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>40</y>
+     <y>30</y>
      <width>91</width>
      <height>22</height>
     </rect>
@@ -285,12 +283,17 @@ RBF and Polynomial only</string>
      <string>RBF</string>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>Sigmoid</string>
+    </property>
+   </item>
   </widget>
   <widget class="QDoubleSpinBox" name="svmCSpin">
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>100</y>
+     <y>90</y>
      <width>71</width>
      <height>22</height>
     </rect>
@@ -321,6 +324,24 @@ Pegasos: lambda, accuracy-generalization tradeoff parameter </string>
    </property>
    <property name="value">
     <double>1.000000000000000</double>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="optimizeCheck">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>120</y>
+     <width>100</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Optimize Kernel</string>
    </property>
   </widget>
  </widget>

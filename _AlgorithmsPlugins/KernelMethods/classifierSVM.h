@@ -34,14 +34,16 @@ private:
     int type;
 public:
 	svm_parameter param;
+    bool bOptimize;
 
 	ClassifierSVM();
 	~ClassifierSVM();
 	void Train(std::vector< fvec > samples, ivec labels);
-	float Test(const fvec &sample);
+    void Optimize(svm_problem *problem);
+    float Test(const fvec &sample);
 	float Test(const fVec &sample);
 	fvec TestMulti(const fvec &sample);
-	char *GetInfoString();
+    const char *GetInfoString();
 	void SetParams(int svmType, float svmC, u32 kernelType, float kernelParam);
     svm_model *GetModel(){return svm;}
 };

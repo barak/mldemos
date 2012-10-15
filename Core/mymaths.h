@@ -109,11 +109,13 @@ fvec operator + (const fvec a, const float b);
 fvec operator - (const fvec a, const float b);
 fvec operator * (const fvec a, const float b);
 fvec operator / (const fvec a, const float b);
-float operator * (const fvec a, const fvec b);
+float operator * (const fvec a, const fvec b); // dot product
 bool operator == (const fvec a, const fvec b);
 bool operator == (const fvec a, const float b);
 bool operator != (const fvec a, const fvec b);
 bool operator != (const fvec a, const float b);
+//dvec operator = (const fvec a);
+//void operator = (dvec &a, const fvec b);
 
 std::vector<fvec> interpolate(std::vector<fvec> a, int count);
 std::vector<fvec> interpolateSpline(std::vector<fvec> a, int count);
@@ -148,5 +150,7 @@ static inline fvec RandN(int dim, float mean=0.f, float sigma=1.f)
 	FOR(d,dim) res[d] = RandN(mean, sigma);
 	return res;
 }
+
+fvec RandCovMatrix(int dim, float minLambda);
 
 #endif // _MY_MATHS_H

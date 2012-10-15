@@ -30,8 +30,10 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <QPixmap>
 #include <QBitmap>
 #include <QSettings>
+#include <QMutexLocker>
 #include <QFileDialog>
 #include <QProgressDialog>
+#include <qcontour.h>
 
 using namespace std;
 
@@ -46,9 +48,11 @@ void MLDemos::Classify()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsClassify->tabWidget->currentIndex();
+    if(!optionsClassify->algoList->count()) return;
+    int tab = optionsClassify->algoList->currentIndex();
     if(tab >= classifiers.size() || !classifiers[tab]) return;
 
     classifier = classifiers[tab]->GetClassifier();
@@ -99,59 +103,6 @@ void MLDemos::Classify()
     mutex.unlock();
 }
 
-void MLDemos::ClassifyCross()
-{
-    if(!canvas || !canvas->data->GetCount()) return;
-    drawTimer->Stop();
-    QMutexLocker lock(&mutex);
-    DEL(clusterer);
-    DEL(regressor);
-    DEL(dynamical);
-    DEL(classifier);
-    DEL(maximizer);
-    DEL(projector);
-    lastTrainingInfo = "";
-    int tab = optionsClassify->tabWidget->currentIndex();
-    if(tab >= classifiers.size() || !classifiers[tab]) return;
-    tabUsedForTraining = tab;
-
-    float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
-    int ratioIndex = optionsClassify->traintestRatioCombo->currentIndex();
-    float trainRatio = ratios[ratioIndex];
-    int positive = optionsClassify->positiveSpin->value();
-    int foldCount = optionsClassify->foldCountSpin->value();
-    vector<bool> trainList;
-    if(optionsClassify->manualTrainButton->isChecked())
-    {
-        // we get the list of samples that are checked
-        trainList = GetManualSelection();
-    }
-
-    vector<fvec> fmeasures;
-    fmeasures.resize(2);
-    bool trained = false;
-    FOR(f,foldCount)
-    {
-        DEL(classifier);
-        classifier = classifiers[tab]->GetClassifier();
-        trained = Train(classifier, positive, trainRatio, trainList);
-        if(!trained) break;
-        if(classifier->rocdata.size()>0)
-        {
-            fmeasures[0].push_back(GetBestFMeasure(classifier->rocdata[0])[0]);
-        }
-        if(classifier->rocdata.size()>1)
-        {
-            fmeasures[1].push_back(GetBestFMeasure(classifier->rocdata[1])[0]);
-        }
-    }
-    classifier->crossval = fmeasures;
-    ShowCross();
-    //if(trained) classifiers[tab]->Draw(canvas, classifier);
-    DEL(classifier);
-    UpdateInfo();
-}
-
 vector<bool> MLDemos::GetManualSelection()
 {
     vector<bool> trainList;
@@ -196,9 +147,11 @@ void MLDemos::Regression()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsRegress->tabWidget->currentIndex();
+    if(!optionsRegress->algoList->count()) return;
+    int tab = optionsRegress->algoList->currentIndex();
     if(tab >= regressors.size() || !regressors[tab]) return;
     int outputDim = optionsRegress->outputDimCombo->currentIndex();
     ivec inputDims = GetInputDimensions();
@@ -210,6 +163,11 @@ void MLDemos::Regression()
     {
         outputIndexInList = i;
         break;
+    }
+    if(outputDim != -1)
+    {
+        ui.canvasX2Spin->setValue(outputDim+1);
+        DisplayOptionChanged();
     }
 
     regressor = regressors[tab]->GetRegressor();
@@ -227,11 +185,6 @@ void MLDemos::Regression()
     }
 
     Train(regressor, outputDim, trainRatio, trainList);
-    if(outputDim != -1)
-    {
-        ui.canvasX2Spin->setValue(outputDim+1);
-        DisplayOptionChanged();
-    }
     regressors[tab]->Draw(canvas, regressor);
 
     // here we draw the errors for each sample
@@ -281,54 +234,6 @@ void MLDemos::Regression()
     UpdateInfo();
 }
 
-void MLDemos::RegressionCross()
-{
-    if(!canvas || !canvas->data->GetCount()) return;
-    drawTimer->Stop();
-    drawTimer->Clear();
-    QMutexLocker lock(&mutex);
-    DEL(clusterer);
-    DEL(regressor);
-    DEL(dynamical);
-    DEL(classifier);
-    DEL(maximizer);
-    DEL(projector);
-    lastTrainingInfo = "";
-    int tab = optionsRegress->tabWidget->currentIndex();
-    if(tab >= regressors.size() || !regressors[tab]) return;
-    int outputDim = optionsRegress->outputDimCombo->currentIndex();
-    regressor = regressors[tab]->GetRegressor();
-    tabUsedForTraining = tab;
-
-    float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
-    int ratioIndex = optionsRegress->traintestRatioCombo->currentIndex();
-    float trainRatio = ratios[ratioIndex];
-    int foldCount = optionsRegress->foldCountSpin->value();
-
-    vector<fvec> errors;
-    errors.resize(2);
-    FOR(f,foldCount)
-    {
-        DEL(regressor);
-        regressor = regressors[tab]->GetRegressor();
-        Train(regressor, trainRatio);
-        if(regressor->trainErrors.size())
-        {
-            errors[0] = regressor->trainErrors;
-        }
-        if(regressor->testErrors.size())
-        {
-            errors[1] = regressor->testErrors;
-        }
-    }
-    regressor->crossval = errors;
-    ShowCross();
-
-    Train(regressor, outputDim, trainRatio);
-    regressors[tab]->Draw(canvas, regressor);
-    UpdateInfo();
-}
-
 void MLDemos::Dynamize()
 {
     if(!canvas || !canvas->data->GetCount() || !canvas->data->GetSequences().size()) return;
@@ -340,9 +245,11 @@ void MLDemos::Dynamize()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsDynamic->tabWidget->currentIndex();
+    if(!optionsDynamic->algoList->count()) return;
+    int tab = optionsDynamic->algoList->currentIndex();
     if(tab >= dynamicals.size() || !dynamicals[tab]) return;
     dynamical = dynamicals[tab]->GetDynamical();
     tabUsedForTraining = tab;
@@ -382,6 +289,7 @@ void MLDemos::Dynamize()
 
         if(canvas->canvasType == 0) // standard canvas
         {
+            /*
             QPainter painter(&canvas->maps.model);
             painter.setRenderHint(QPainter::Antialiasing);
             FOR(i, testTrajectories.size())
@@ -402,6 +310,7 @@ void MLDemos::Dynamize()
                 painter.setPen(Qt::red);
                 painter.drawEllipse(canvas->toCanvasCoords(result[count-1]), 5, 5);
             }
+            */
         }
         else
         {
@@ -428,6 +337,7 @@ void MLDemos::Dynamize()
 void MLDemos::Avoidance()
 {
     if(!canvas || !dynamical) return;
+    if(!optionsDynamic->obstacleCombo->count()) return;
     drawTimer->Stop();
     QMutexLocker lock(&mutex);
     // the first index is "none", so we subtract 1
@@ -571,19 +481,27 @@ void MLDemos::Cluster()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsCluster->tabWidget->currentIndex();
+    if(!optionsCluster->algoList->count()) return;
+    int tab = optionsCluster->algoList->currentIndex();
     if(tab >= clusterers.size() || !clusterers[tab]) return;
     clusterer = clusterers[tab]->GetClusterer();
     tabUsedForTraining = tab;
     vector<bool> trainList;
+    float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
+    int ratioIndex = optionsCluster->trainTestCombo->currentIndex();
+    float trainRatio = ratios[ratioIndex];
+
     if(optionsCluster->manualTrainButton->isChecked())
     {
         // we get the list of samples that are checked
         trainList = GetManualSelection();
     }
-    Train(clusterer, trainList);
+
+    float testError;
+    Train(clusterer, trainRatio, trainList, &testError);
     drawTimer->Stop();
     drawTimer->Clear();
     clusterers[tab]->Draw(canvas,clusterer);
@@ -605,11 +523,11 @@ void MLDemos::Cluster()
         }
     }
 
-    int ratioIndex = optionsCluster->trainRatioCombo->currentIndex();
-    float ratios[] = {0.01f, 0.05f, 0.1f, 0.2f, 1.f/3.f, 0.5f, 0.75f, 1.f};
-    float ratio = ratios[ratioIndex];
+    int f1ratioIndex = optionsCluster->trainRatioCombo->currentIndex();
+    float f1ratios[] = {0.01f, 0.05f, 0.1f, 0.2f, 1.f/3.f, 0.5f, 0.75f, 1.f};
+    float f1ratio = f1ratios[f1ratioIndex];
 
-    fvec clusterMetrics = ClusterMetrics(samples, labels, clusterScores, ratio);
+    fvec clusterMetrics = ClusterMetrics(samples, labels, clusterScores, f1ratio);
 
     optionsCluster->resultList->clear();
     optionsCluster->resultList->addItem(QString("rss: %1").arg(clusterMetrics[0], 0, 'f', 2));
@@ -620,7 +538,6 @@ void MLDemos::Cluster()
     {
         optionsCluster->resultList->item(i)->setForeground(i ? SampleColor[i%SampleColorCnt] : Qt::gray);
     }
-
 
     // we fill in the canvas sampleColors for the alternative display types
     canvas->sampleColors.resize(samples.size());
@@ -649,8 +566,110 @@ void MLDemos::Cluster()
     canvas->repaint();
 
     UpdateInfo();
+    QString infoText = showStats->infoText->text();
+    infoText += "\nClustering as Classifier\n";
+    infoText += QString("F-Measure: %1\n").arg(testError, 0, 'f', 3);
+    showStats->infoText->setText(infoText);
+
     drawTimer->clusterer= &this->clusterer;
     drawTimer->start(QThread::NormalPriority);
+}
+
+void MLDemos::ClusterTest()
+{
+    if(!canvas || !canvas->data->GetCount()) return;
+    drawTimer->Stop();
+    drawTimer->Clear();
+    QMutexLocker lock(&mutex);
+    DEL(clusterer);
+    DEL(regressor);
+    DEL(dynamical);
+    DEL(classifier);
+    DEL(maximizer);
+    DEL(reinforcement);
+    DEL(projector);
+    lastTrainingInfo = "";
+    if(!optionsCluster->algoList->count()) return;
+    int tab = optionsCluster->algoList->currentIndex();
+    if(tab >= clusterers.size() || !clusterers[tab]) return;
+    clusterer = clusterers[tab]->GetClusterer();
+    tabUsedForTraining = tab;
+
+    int startCount=optionsCluster->rangeStartSpin->value(), stopCount=optionsCluster->rangeStopSpin->value();
+    if(startCount>stopCount) startCount ^= stopCount ^= startCount ^= stopCount;
+
+    vector<fvec> samples = canvas->data->GetSamples();
+    ivec labels = canvas->data->GetLabels();
+    int f1ratioIndex = optionsCluster->trainRatioCombo->currentIndex();
+    float f1ratios[] = {0.01f, 0.05f, 0.1f, 0.2f, 1.f/3.f, 0.5f, 0.75f, 1.f};
+    float ratio = f1ratios[f1ratioIndex];
+
+    float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
+    int ratioIndex = optionsCluster->trainTestCombo->currentIndex();
+    float trainRatio = ratios[ratioIndex];
+
+    vector<bool> trainList;
+    if(optionsCluster->manualTrainButton->isChecked())
+    {
+        // we get the list of samples that are checked
+        trainList = GetManualSelection();
+    }
+
+    float testError = 0;
+    int crossValCount = 5;
+    fvec testErrors(crossValCount);
+
+    FOR(j, crossValCount)
+    {
+        Train(clusterer, trainRatio, trainList, &testError);
+        testErrors[j] = testError;
+    }
+
+    // we fill in the canvas sampleColors for the alternative display types
+    canvas->sampleColors.resize(samples.size());
+    FOR(i, samples.size())
+    {
+        fvec res = clusterer->Test(samples[i]);
+        float r=0,g=0,b=0;
+        if(res.size() > 1)
+        {
+            FOR(j, res.size())
+            {
+                r += SampleColor[(j+1)%SampleColorCnt].red()*res[j];
+                g += SampleColor[(j+1)%SampleColorCnt].green()*res[j];
+                b += SampleColor[(j+1)%SampleColorCnt].blue()*res[j];
+            }
+        }
+        else if(res.size())
+        {
+            r = (1-res[0])*255 + res[0]* 255;
+            g = (1-res[0])*255;
+            b = (1-res[0])*255;
+        }
+        canvas->sampleColors[i] = QColor(r,g,b);
+    }
+    canvas->maps.model = QPixmap();
+    clusterers[tab]->Draw(canvas, clusterer);
+
+    UpdateInfo();
+    QString infoText = showStats->infoText->text();
+    infoText += "\nClustering as Classifier\nF-Measures:\n";
+
+    float mean=0, stdev=0;
+    FOR(j, testErrors.size()) mean += testErrors[j];
+    mean /= testErrors.size();
+    FOR(j, testErrors.size()) stdev += (testErrors[j] - mean)*(testErrors[j] - mean);
+    stdev /= testErrors.size();
+    stdev = sqrtf(stdev);
+    infoText += QString("%1 clusters: %2 (+- %3)\n").arg(clusterer->NbClusters()).arg(mean, 0, 'f', 3).arg(stdev, 0, 'f', 3);
+
+    showStats->infoText->setText(infoText);
+    showStats->tabWidget->setCurrentIndex(1); // we show the info panel
+    statsDialog->show();
+
+    drawTimer->clusterer= &this->clusterer;
+    drawTimer->start(QThread::NormalPriority);
+    canvas->repaint();
 }
 
 void MLDemos::ClusterOptimize()
@@ -664,21 +683,27 @@ void MLDemos::ClusterOptimize()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-
-    int tab = optionsCluster->tabWidget->currentIndex();
+    if(!optionsCluster->algoList->count()) return;
+    int tab = optionsCluster->algoList->currentIndex();
     if(tab >= clusterers.size() || !clusterers[tab]) return;
     clusterer = clusterers[tab]->GetClusterer();
     tabUsedForTraining = tab;
 
-    int startCount=1, stopCount=11;
+    int startCount=optionsCluster->rangeStartSpin->value(), stopCount=optionsCluster->rangeStopSpin->value();
+    if(startCount>stopCount) startCount ^= stopCount ^= startCount ^= stopCount;
 
     vector<fvec> samples = canvas->data->GetSamples();
     ivec labels = canvas->data->GetLabels();
-    int ratioIndex = optionsCluster->trainRatioCombo->currentIndex();
-    float ratios[] = {0.01f, 0.05f, 0.1f, 0.2f, 1.f/3.f, 0.5f, 0.75f, 1.f};
-    float ratio = ratios[ratioIndex];
+    int f1ratioIndex = optionsCluster->trainRatioCombo->currentIndex();
+    float f1ratios[] = {0.01f, 0.05f, 0.1f, 0.2f, 1.f/3.f, 0.5f, 0.75f, 1.f};
+    float ratio = f1ratios[f1ratioIndex];
+
+    float ratios [] = {.1f,.25f,1.f/3.f,.5f,2.f/3.f,.75f,.9f,1.f};
+    int ratioIndex = optionsCluster->trainTestCombo->currentIndex();
+    float trainRatio = ratios[ratioIndex];
 
     vector<bool> trainList;
     if(optionsCluster->manualTrainButton->isChecked())
@@ -687,41 +712,69 @@ void MLDemos::ClusterOptimize()
         trainList = GetManualSelection();
     }
 
+    float testError = 0;
     ivec kCounts;
-    vector<fvec> results(4);
-    for(int k=startCount; k<stopCount; k++)
+    vector< vector<fvec> > resultList(4);
+    vector<fvec> testErrors(stopCount-startCount+1);
+    int crossValCount = 5;
+    FOR(i, resultList.size()) resultList[i].resize(crossValCount);
+    for(int k=startCount; k<=stopCount; k++)
     {
         clusterer->SetNbClusters(k);
-        Train(clusterer, trainList);
-
-        int folds = 10;
-        fvec metricMeans(results.size());
-        ivec foldCount(results.size());
-        FOR(f, folds)
+        testErrors[k-startCount].resize(crossValCount);
+        FOR(j, crossValCount)
         {
-            vector<fvec> clusterScores(samples.size());
-            FOR(i, canvas->data->GetCount())
+            Train(clusterer, trainRatio, trainList, &testError);
+            testErrors[k-startCount][j] = testError;
+
+            int folds = 10;
+            fvec metricMeans(resultList.size());
+            ivec foldCount(resultList.size());
+            FOR(f, folds)
             {
-                fvec result = clusterer->Test(samples[i]);
-                if(clusterer->NbClusters()==1) clusterScores[i] = result;
-                else if(result.size()>1) clusterScores[i] = result;
-                else if(result.size())
+                vector<fvec> clusterScores(samples.size());
+                FOR(i, canvas->data->GetCount())
                 {
-                    fvec res(clusterer->NbClusters(),0);
-                    res[result[0]] = 1.f;
+                    fvec result = clusterer->Test(samples[i]);
+                    if(clusterer->NbClusters()==1) clusterScores[i] = result;
+                    else if(result.size()>1) clusterScores[i] = result;
+                    else if(result.size())
+                    {
+                        fvec res(clusterer->NbClusters(),0);
+                        res[result[0]] = 1.f;
+                    }
+                }
+                fvec clusterMetrics = ClusterMetrics(samples, labels, clusterScores, ratio);
+                FOR(d, clusterMetrics.size())
+                {
+                    if(clusterMetrics[d] != clusterMetrics[d]) continue; // not a number
+                    metricMeans[d] += clusterMetrics[d];
+                    foldCount[d]++;
                 }
             }
-            fvec clusterMetrics = ClusterMetrics(samples, labels, clusterScores, ratio);
-            FOR(d, clusterMetrics.size())
+            FOR(d, metricMeans.size()) metricMeans[d] /= foldCount[d];
+            FOR(i, metricMeans.size())
             {
-                if(clusterMetrics[d] != clusterMetrics[d]) continue;
-                metricMeans[d] += clusterMetrics[d];
-                foldCount[d]++;
+                resultList[i][j].push_back(metricMeans[i]);
             }
         }
-        FOR(d, metricMeans.size()) metricMeans[d] /= foldCount[d];
         kCounts.push_back(k);
-        FOR(i, metricMeans.size()) results[i].push_back(metricMeans[i]);
+    }
+
+    vector<fvec> results(4);
+    FOR(i, resultList.size())
+    {
+        results[i].resize(resultList[i][0].size());
+        FOR(k, resultList[i][0].size())
+        {
+            double value = 0;
+            FOR(j, crossValCount)
+            {
+                value += resultList[i][j][k];
+            }
+            value /= crossValCount;
+            results[i][k] = value;
+        }
     }
 
     int w = optionsCluster->graphLabel->width();
@@ -758,6 +811,7 @@ void MLDemos::ClusterOptimize()
             maxes[i] = max(maxes[i], results[i][j]);
         }
     }
+
     vector< pair<float,int> > bests(results.size());
     FOR(i, results.size())
     {
@@ -772,7 +826,7 @@ void MLDemos::ClusterOptimize()
             }
             float x = k/(float)(kCounts.size()-1);
             float y = (results[i][k] - mins[i])/(maxes[i]-mins[i]);
-            if(i == 3) y = 1.f - y; // fmeasures needs to be maximized
+            //if(i == 3) y = 1.f - y; // fmeasures needs to be maximized
             QPointF point(x*(w-2*pad)+pad, (1.f-y)*(h-2*pad));
             if(k) painter.drawLine(old, point);
             old = point;
@@ -784,7 +838,7 @@ void MLDemos::ClusterOptimize()
     optionsCluster->resultList->addItem(QString("rss: %1 (%2)").arg(bests[0].second).arg(bests[0].first, 0, 'f', 2));
     optionsCluster->resultList->addItem(QString("bic: %1 (%2)").arg(bests[1].second).arg(bests[1].first, 0, 'f', 2));
     optionsCluster->resultList->addItem(QString("aic: %1 (%2)").arg(bests[2].second).arg(bests[2].first, 0, 'f', 2));
-    optionsCluster->resultList->addItem(QString("f1: %1 (%2)").arg(bests[3].second).arg(-bests[3].first, 0, 'f', 2));
+    optionsCluster->resultList->addItem(QString("f1: %1 (%2)").arg(bests[3].second).arg(bests[3].first, 0, 'f', 2));
     FOR(i, results.size())
     {
         optionsCluster->resultList->item(i)->setForeground(i ? SampleColor[i%SampleColorCnt] : Qt::gray);
@@ -792,7 +846,7 @@ void MLDemos::ClusterOptimize()
 
     int bestIndex = optionsCluster->optimizeCombo->currentIndex();
     clusterer->SetNbClusters(bests[bestIndex].second);
-    Train(clusterer);
+    Train(clusterer, trainRatio, trainList, &testError);
 
     // we fill in the canvas sampleColors for the alternative display types
     canvas->sampleColors.resize(samples.size());
@@ -820,19 +874,31 @@ void MLDemos::ClusterOptimize()
     canvas->maps.model = QPixmap();
 
     clusterers[tab]->Draw(canvas, clusterer);
-    drawTimer->Clear();
     UpdateInfo();
+    QString infoText = showStats->infoText->text();
+    infoText += "\nClustering as Classifier\nF-Measures:\n";
+    FOR(i, testErrors.size())
+    {
+        float mean=0, stdev=0;
+        FOR(j, testErrors[i].size()) mean += testErrors[i][j];
+        mean /= testErrors[i].size();
+        FOR(j, testErrors[i].size()) stdev += (testErrors[i][j] - mean)*(testErrors[i][j] - mean);
+        stdev /= testErrors[i].size();
+        stdev = sqrtf(stdev);
+        infoText += QString("%1 clusters: %2 (+- %3)\n").arg(i+1).arg(mean, 0, 'f', 3).arg(stdev, 0, 'f', 3);
+    }
+    showStats->infoText->setText(infoText);
+
     drawTimer->clusterer= &this->clusterer;
     drawTimer->start(QThread::NormalPriority);
     canvas->repaint();
-
 }
 
 void MLDemos::ClusterIterate()
 {
     if(!canvas || !canvas->data->GetCount()) return;
     drawTimer->Stop();
-    int tab = optionsCluster->tabWidget->currentIndex();
+    int tab = optionsCluster->algoList->currentIndex();
     if(tab >= clusterers.size() || !clusterers[tab]) return;
     QMutexLocker lock(&mutex);
     if(!clusterer)
@@ -886,15 +952,68 @@ void MLDemos::Maximize()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsMaximize->tabWidget->currentIndex();
+    if(!optionsMaximize->algoList->count()) return;
+    int tab = optionsMaximize->algoList->currentIndex();
     if(tab >= maximizers.size() || !maximizers[tab]) return;
     maximizer = maximizers[tab]->GetMaximizer();
     maximizer->maxAge = optionsMaximize->iterationsSpin->value();
     maximizer->stopValue = optionsMaximize->stoppingSpin->value();
     tabUsedForTraining = tab;
     Train(maximizer);
+
+    // we draw the contours for the current maximization
+    int w = 65;
+    int h = 65;
+    int W = canvas->width();
+    int H = canvas->height();
+    canvas->maps.info = QPixmap(W, H);
+    QBitmap bitmap(canvas->width(), canvas->height());
+    canvas->maps.info.setMask(bitmap);
+    canvas->maps.info.fill(Qt::transparent);
+    QPainter painter(&canvas->maps.info);
+
+    double *bigData = canvas->data->GetReward()->rewards;
+    double maxVal = -DBL_MAX;
+    FOR(i, W*H) maxVal = max(bigData[i], maxVal);
+    maxVal *= maximizer->stopValue; // used to ensure we have a maximum somewhere
+    double *data = new double[w*h];
+    FOR(i, w)
+    {
+        FOR(j, h)
+        {
+            int I = i*W/(w-1);
+            int J = j*H/(h-1);
+            if(I >= W) I = W-1;
+            if(J >= H) J = H-1;
+            data[j*w + i] = bigData[J*W + I];
+        }
+    }
+
+    QContour contour(data, w, h);
+    contour.bDrawColorbar = false;
+    contour.plotColor = Qt::black;
+    contour.plotThickness = 1.5;
+    contour.style = Qt::DashLine;
+    //contour.style;
+    contour.Paint(painter, 10);
+    // we want to find all the samples that are at maximum value
+    painter.setPen(QColor(255,255,0));
+    FOR(i,W)
+    {
+        FOR(j,H)
+        {
+            if(bigData[j*W + i] >= maxVal)
+            {
+                painter.drawPoint(i,j);
+            }
+        }
+    }
+
+    delete [] data;
+    canvas->repaint();
 
     UpdateInfo();
     drawTimer->Stop();
@@ -919,9 +1038,101 @@ void MLDemos::MaximizeContinue()
     }
 }
 
-void MLDemos::Project()
+void MLDemos::Reinforce()
 {
     if(!canvas) return;
+    if(canvas->maps.reward.isNull()) return;
+    QMutexLocker lock(&mutex);
+    drawTimer->Stop();
+    DEL(clusterer);
+    DEL(regressor);
+    DEL(dynamical);
+    DEL(classifier);
+    DEL(maximizer);
+    DEL(reinforcement);
+    DEL(projector);
+    lastTrainingInfo = "";
+    if(!optionsReinforcement->algoList->count()) return;
+    int tab = optionsReinforcement->algoList->currentIndex();
+    if(tab >= reinforcements.size() || !reinforcements[tab]) return;
+    reinforcement = reinforcements[tab]->GetReinforcement();
+
+    reinforcementProblem.problemType = optionsReinforcement->problemCombo->currentIndex();
+    reinforcementProblem.rewardType = optionsReinforcement->rewardCombo->currentIndex();
+    reinforcementProblem.policyType = optionsReinforcement->policyCombo->currentIndex();
+    reinforcementProblem.quantizeType = optionsReinforcement->quantizeCombo->currentIndex();
+    reinforcementProblem.gridSize = optionsReinforcement->resolutionSpin->value();
+
+    reinforcementProblem.simulationSteps = optionsReinforcement->iterationsSpin->value();
+    reinforcementProblem.displayIterationsCount = optionsReinforcement->displayIterationSpin->value();
+
+    reinforcement->maxAge = optionsReinforcement->iterationsSpin->value();
+
+    tabUsedForTraining = tab;
+    Train(reinforcement);
+    reinforcements[tab]->Draw(canvas, reinforcement);
+
+    // we draw the contours for the current maximization
+    int w = 65;
+    int h = 65;
+    int W = canvas->width();
+    int H = canvas->height();
+    canvas->maps.info = QPixmap(W, H);
+    QBitmap bitmap(canvas->width(), canvas->height());
+    canvas->maps.info.setMask(bitmap);
+    canvas->maps.info.fill(Qt::transparent);
+    QPainter painter(&canvas->maps.info);
+
+    double *bigData = canvas->data->GetReward()->rewards;
+    double *data = new double[w*h];
+    FOR(i, w)
+    {
+        FOR(j, h)
+        {
+            int I = i*W/(w-1);
+            int J = j*H/(h-1);
+            if(I >= W) I = W-1;
+            if(J >= H) J = H-1;
+            data[j*w + i] = bigData[J*W + I];
+        }
+    }
+
+    QContour contour(data, w, h);
+    contour.bDrawColorbar = false;
+    contour.plotColor = Qt::black;
+    contour.plotThickness = 1.5;
+    contour.style = Qt::DashLine;
+    //contour.style;
+    contour.Paint(painter, 10);
+    delete [] data;
+    canvas->repaint();
+
+    UpdateInfo();
+    drawTimer->Stop();
+    drawTimer->Clear();
+    drawTimer->start(QThread::NormalPriority);
+}
+
+void MLDemos::ReinforceContinue()
+{
+    if(!canvas || !reinforcement) return;
+    QMutexLocker lock(&mutex);
+    if(drawTimer)
+    {
+        drawTimer->Stop();
+    }
+    reinforcement->SetConverged(!reinforcement->hasConverged());
+
+    UpdateInfo();
+    if(drawTimer)
+    {
+        drawTimer->start(QThread::NormalPriority);
+    }
+}
+
+void MLDemos::Project()
+{
+    if(!canvas || !canvas->data->GetCount()) return;
     QMutexLocker lock(&mutex);
     drawTimer->Stop();
     drawTimer->Clear();
@@ -930,9 +1141,11 @@ void MLDemos::Project()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
-    int tab = optionsProject->tabWidget->currentIndex();
+    if(!optionsProject->algoList->count()) return;
+    int tab = optionsProject->algoList->currentIndex();
     if(tab >= projectors.size() || !projectors[tab]) return;
     projector = projectors[tab]->GetProjector();
     projectors[tab]->SetParams(projector);
@@ -962,13 +1175,11 @@ void MLDemos::Project()
         canvas->data->SetSamples(projectedData);
         canvas->data->bProjected = true;
     }
-    //canvas->FitToData();
+    if(optionsProject->fitCheck->isChecked()) canvas->FitToData();
     CanvasTypeChanged();
     CanvasOptionsChanged();
-    if(!canvas->canvasType)
-    {
-        projectors[tab]->Draw(canvas, projector);
-    }
+    ResetPositiveClass();
+    projectors[tab]->Draw(canvas, projector);
     canvas->repaint();
     UpdateInfo();
 }
@@ -983,6 +1194,7 @@ void MLDemos::ProjectRevert()
     DEL(dynamical);
     DEL(classifier);
     DEL(maximizer);
+    DEL(reinforcement);
     DEL(projector);
     lastTrainingInfo = "";
     if(!sourceData.size()) return;
@@ -991,9 +1203,11 @@ void MLDemos::ProjectRevert()
     canvas->data->bProjected = false;
     canvas->maps.info = QPixmap();
     canvas->maps.model = QPixmap();
-    canvas->FitToData();
+    canvas->maps.confidence = QPixmap();
+    if(optionsProject->fitCheck->isChecked()) canvas->FitToData();
     CanvasTypeChanged();
     CanvasOptionsChanged();
+    ResetPositiveClass();
     canvas->repaint();
     UpdateInfo();
     sourceData.clear();
@@ -1002,18 +1216,12 @@ void MLDemos::ProjectRevert()
 
 void MLDemos::ProjectReproject()
 {
-    if(!canvas) return;
+    if(!canvas || !canvas->data->GetCount()) return;
     mutex.lock();
     sourceData = canvas->data->GetSamples();
     sourceLabels = canvas->data->GetLabels();
     mutex.unlock();
     Project();
-}
-
-void MLDemos::ExportOutput()
-{
-    if(!classifier && !regressor && !clusterer && !dynamical && !maximizer) return;
-    // get a file
 }
 
 void MLDemos::ExportAnimation()
@@ -1136,6 +1344,7 @@ void MLDemos::UpdateLearnedModel()
 
             if(canvas->canvasType == 0) // standard canvas
             {
+                /*
                 QPainter painter(&canvas->maps.model);
                 painter.setRenderHint(QPainter::Antialiasing);
                 FOR(i, testTrajectories.size())
@@ -1156,6 +1365,7 @@ void MLDemos::UpdateLearnedModel()
                     painter.setPen(Qt::red);
                     painter.drawEllipse(canvas->toCanvasCoords(result[count-1]), 5, 5);
                 }
+                */
             }
             else
             {
@@ -1179,7 +1389,7 @@ void MLDemos::UpdateLearnedModel()
         }
 
     }
-    if(projector)
+    if(!canvas->canvasType && projector)
     {
         projectors[tabUsedForTraining]->Draw(canvas, projector);
     }

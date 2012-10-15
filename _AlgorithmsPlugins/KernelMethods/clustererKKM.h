@@ -30,25 +30,33 @@ class ClustererKKM : public Clusterer
 private:
 	int kernelType;
 	float kernelGamma;
-	float kernelDegree;
+    float kernelDegree;
+    float kernelOffset;
 
 	int maxVectors;
 
-	dlib::kkmeans<lin_kernel> *linKmeans;
-	dlib::kkmeans<pol_kernel> *polKmeans;
-	dlib::kkmeans<rbf_kernel> *rbfKmeans;
+    int kernelTypeTrained;
+    void *decFunction;
 
 public:
 
-    ClustererKKM() : linKmeans(NULL), polKmeans(NULL), rbfKmeans(NULL), kernelType(2), kernelGamma(0.01), kernelDegree(2), maxVectors(8) {}
+    ClustererKKM() : decFunction(NULL), kernelType(2), kernelGamma(0.01), kernelDegree(2), maxVectors(8) {}
     ~ClustererKKM();
-	void Train(std::vector< fvec > samples);
-	fvec Test( const fvec &sample);
-	fvec Test( const fVec &sample);
-	char *GetInfoString();
 
-	void SetParams(int clusters, int kernelType, float kernelGamma, int kernelDegree)
-    {this->nbClusters=clusters;this->kernelType=kernelType;this->kernelGamma=kernelGamma;this->kernelDegree=kernelDegree;}
+	void Train(std::vector< fvec > samples);
+
+    template <int N> void KillDim();
+    template <int N> void TrainDim(std::vector< fvec > _samples);
+    template <int N> fvec TestDim(const fvec &sample);
+    template <int N> double TestScoreDim(const fvec &sample, int index);
+    template <int N> fvec TestUnnormalizedDim(const fvec &sample);
+    fvec Test( const fvec &sample);
+    double TestScore(const fvec &_sample, const int index);
+    fvec TestUnnormalized( const fvec &sample);
+    const char *GetInfoString();
+
+    void SetParams(int clusters, int kernelType, float kernelGamma, int kernelDegree, float kernelOffset)
+    {this->nbClusters=clusters;this->kernelType=kernelType;this->kernelGamma=kernelGamma;this->kernelDegree=kernelDegree; this->kernelOffset=kernelOffset;}
 };
 
 #endif // _CLUSTERER_KKM_H_

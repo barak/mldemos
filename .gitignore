@@ -8,25 +8,26 @@ last-data.txt
 */ValgrindOut.xml
 pluginsDebug/*
 plugins/*
-mldemos
-*.a
+/mldemos
 
 # osx noise
 .DS_Store
 profile
 
 # qt noise
+*.new
+*.a
 Makefile*
 *.pro.user*
 *.app
 *.dylib
 
-#codeblocks noise
+# codeblocks noise
 *.layout
 *.depend
 
 # xcode noise
-build/*
+build/
 *.mode1
 *.mode1v3
 *.mode2v3

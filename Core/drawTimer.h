@@ -27,6 +27,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "dynamical.h"
 #include "clusterer.h"
 #include "maximize.h"
+#include "reinforcement.h"
 #include <QMutex>
 #include <QMutexLocker>
 
@@ -38,6 +39,7 @@ private:
 	int refineMax;
 	QImage bigMap;
 	QImage modelMap;
+    QImage animationImage;
 	u32 *perm;
 	Canvas *canvas;
 	int w, h, dim;
@@ -47,11 +49,13 @@ public:
 	~DrawTimer();
 	void run();
 	void Refine();
+    void Animate();
 	void Clear();
-	void TestFast(int start, int stop);
-	void Vectors(int count, int steps);
-	void VectorsFast(int count, int steps);
+    bool TestFast(int start, int stop);
+    bool Vectors(int count, int steps);
+    bool VectorsFast(int count, int steps);
 	void Maximization();
+    void Reinforce();
 	void Stop();
     static QColor GetColor(Classifier *classifier, fvec sample);
 
@@ -59,17 +63,22 @@ public:
 	Regressor **regressor;
 	Dynamical **dynamical;
 	Clusterer **clusterer;
-	Maximizer **maximizer;
+    Maximizer **maximizer;
+    Reinforcement **reinforcement;
+    ReinforcementProblem *reinforcementProblem;
 
 	QMutex *mutex, drawMutex;
 	bool bPaused;
 	bool bRunning;
 	bool bColorMap;
+    int maximumVisitedCount;
 
 	signals:
 	void MapReady(QImage image);
 	void ModelReady(QImage image);
+    void AnimationReady(QImage image);
 	void CurveReady();
+    void ReinforceUpdate();
 };
 
 #endif // _DRAWTIMER_H_

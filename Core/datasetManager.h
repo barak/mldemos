@@ -60,14 +60,18 @@ struct RewardMap
 	int dim;
 	ivec size; // size of reward array in each dimension
 	int length; // size[0]*size[1]*...*size[dim]
-	float *rewards;
+    double *rewards;
 	fvec lowerBoundary;
 	fvec higherBoundary;
 	RewardMap():rewards(0), dim(0), length(0){}
-	~RewardMap(){if(rewards) delete [] rewards;}
+    ~RewardMap(){if(rewards) delete [] rewards; rewards=0;}
 	RewardMap& operator= (const RewardMap& r);
 
-	void SetReward(float *rewards, ivec size, fvec lowerBoundary, fvec higherBoundary);
+    bool Empty(){return length==0;}
+
+    void SetReward(double *rewards, ivec size, fvec lowerBoundary, fvec higherBoundary);
+
+    void SetReward(float *rewards, ivec size, fvec lowerBoundary, fvec higherBoundary);
 
 	void Clear();
 
@@ -76,12 +80,13 @@ struct RewardMap
 	// return the value of the reward function at the coordinates provided
 	float ValueAt(fvec sample);
 
-	void SetValueAt(fvec sample, float value);
+    float *GetRewardFloat();
 
-	void ShiftValueAt(fvec sample, float shift);
+    void SetValueAt(fvec sample, double value);
 
-	void ShiftValueAt(fvec sample, float radius, float shift);
+    void ShiftValueAt(fvec sample, double shift);
 
+    void ShiftValueAt(fvec sample, double radius, double shift);
 };
 
 struct TimeSerie
@@ -89,7 +94,7 @@ struct TimeSerie
 	std::string name; // name of the current graph line
 	std::vector<long int> timestamps; // time stamps for each frame
 	std::vector<fvec> data; // each vector element is a frame
-	TimeSerie(std::string name="", std::vector<long int> timestamps=std::vector<long int>(), std::vector<fvec> data=std::vector<fvec>()) : name(name), timestamps(timestamps), data(data){};
+    TimeSerie(std::string name="", std::vector<long int> timestamps=std::vector<long int>(), std::vector<fvec> data=std::vector<fvec>()) : name(name), timestamps(timestamps), data(data){}
 	bool operator==(const TimeSerie& t) const {
 		if(name != t.name || timestamps.size() != t.timestamps.size() || data.size() != t.data.size()) return false;
 		for(int i=0; i<timestamps.size(); i++) if(timestamps[i] != t.timestamps[i]) return false;
@@ -120,11 +125,11 @@ struct TimeSerie
 		for(int i=count; i < timestamps.size(); i++) timestamps[i] += lastTimestamp;
 		return *this;}
 	TimeSerie operator+(const TimeSerie& t) const {TimeSerie a = *this; a+=t; return a;}
-	TimeSerie& operator<< (const TimeSerie& t) {return *this += t;};
+    TimeSerie& operator<< (const TimeSerie& t) {return *this += t;}
 
 	TimeSerie& operator+=(const fvec& v) {data.push_back(v); timestamps.push_back(timestamps.back()+1); return *this;}
 	TimeSerie operator+(const fvec& v) const {TimeSerie a = *this; a+=v; return a;}
-	TimeSerie& operator<< (const fvec& v) {return *this += v;};
+    TimeSerie& operator<< (const fvec& v) {return *this += v;}
 };
 
 class DatasetManager
@@ -227,7 +232,6 @@ public:
 
 	void Save(const char *filename);
 	bool Load(const char *filename);
-
 };
 
 #endif // _DATASET_MANAGER_H_

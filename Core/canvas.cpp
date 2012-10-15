@@ -24,6 +24,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <QPainter>
 #include <QPen>
 #include <QImage>
+#include <QFontMetrics>
 #include <iostream>
 
 #include "expose.h"
@@ -47,6 +48,7 @@ Canvas::Canvas(QWidget *parent)
       bDisplayTimeSeries(true),
       bDisplayLearned(true),
       bDisplayGrid(true),
+      bDisplayLegend(true),
       crosshair(QPainterPath()),
       bShowCrosshair(false),
       bNewCrosshair(true),
@@ -83,7 +85,7 @@ Canvas::Canvas(QWidget *parent)
 
 Canvas::~Canvas()
 {
-    if(data) DEL(data);
+    DEL(data);
 }
 
 void Canvas::dragEnterEvent(QDragEnterEvent *event)
@@ -98,6 +100,7 @@ void Canvas::dropEvent(QDropEvent *event)
         QPointF position = event->pos();
         //qDebug() << "Dropping Target at coordinates: " << position;
         targets.push_back(toSampleCoords(position.x(), position.y()));
+        targetAge.push_back(0);
     }
     else if(event->mimeData()->text() == "Gaussian")
     {
@@ -122,6 +125,12 @@ void Canvas::SetConfidenceMap(QImage image)
 void Canvas::SetModelImage(QImage image)
 {
     maps.model = QPixmap::fromImage(image);
+    repaint();
+}
+
+void Canvas::SetAnimationImage(QImage animation)
+{
+    maps.animation = QPixmap::fromImage(animation);
     repaint();
 }
 
@@ -162,15 +171,20 @@ void Canvas::PaintStandard(QPainter &painter, bool bSvg)
             painter.setBackgroundMode(Qt::TransparentMode);
             painter.drawPixmap(geometry(), maps.reward);
         }
-        if(bSvg) DrawSamples(painter);
+        if(bSvg)
+        {
+            painter.setBackgroundMode(Qt::TransparentMode);
+            DrawSamples(painter);
+            DrawObstacles(painter);
+        }
         else
         {
             DrawSamples();
             painter.setBackgroundMode(Qt::TransparentMode);
             painter.drawPixmap(geometry(), maps.samples);
+            DrawObstacles();
+            painter.drawPixmap(geometry(), maps.obstacles);
         }
-        DrawObstacles(painter);
-        //painter.drawPixmap(geometry(), maps.obstacles);
     }
     if(bDisplayTrajectories)
     {
@@ -216,6 +230,11 @@ void Canvas::PaintStandard(QPainter &painter, bool bSvg)
         painter.setBackgroundMode(Qt::TransparentMode);
         painter.drawPixmap(geometry(), maps.model);
     }
+    if(!maps.animation.isNull())
+    {
+        painter.setBackgroundMode(Qt::TransparentMode);
+        painter.drawPixmap(geometry(), maps.animation);
+    }
     if(!bSvg && bDisplayInfo && !maps.info.isNull())
     {
         painter.setBackgroundMode(Qt::TransparentMode);
@@ -232,6 +251,8 @@ void Canvas::PaintStandard(QPainter &painter, bool bSvg)
     {
         if(bSvg)
         {
+            painter.setBackgroundMode(Qt::TransparentMode);
+            DrawAxes(painter);
         }
         else
         {
@@ -239,6 +260,11 @@ void Canvas::PaintStandard(QPainter &painter, bool bSvg)
             painter.setBackgroundMode(Qt::TransparentMode);
             painter.drawPixmap(geometry(), maps.grid);
         }
+    }
+    if(bDisplayLegend)
+    {
+        painter.setBackgroundMode(Qt::TransparentMode);
+        DrawLegend(painter);
     }
 }
 
@@ -377,7 +403,6 @@ void Canvas::paintEvent(QPaintEvent *event)
         params.push_back(zIndex);
         PaintVariable(painter, canvasType-5, params);
     }
-
     bDrawing = false;
 }
 
@@ -389,6 +414,7 @@ QPointF Canvas::toCanvasCoords(fvec sample)
     sample -= center;
     QPointF point(sample[xIndex]*(zoom*zooms[xIndex]*height()),sample[yIndex]*(zoom*zooms[yIndex]*height()));
     point += QPointF(width()/2, height()/2);
+    point.setY(height()-point.y());
     return point;
 }
 
@@ -397,6 +423,7 @@ QPointF Canvas::toCanvas(fVec sample)
     sample -= center;
     QPointF point(sample[xIndex]*(zoom*zooms[xIndex]*height()),sample[yIndex]*(zoom*zooms[yIndex]*height()));
     point += QPointF(width()/2, height()/2);
+    point.setY(height()-point.y());
     return point;
 }
 
@@ -406,6 +433,7 @@ QPointF Canvas::toCanvasCoords(float x, float y)
     y -= center[yIndex];
     QPointF point(x*(zoom*zooms[xIndex]*height()),y*(zoom*zooms[yIndex]*height()));
     point += QPointF(width()/2, height()/2);
+    point.setY(height() - point.y());
     return point;
 }
 
@@ -413,6 +441,7 @@ fvec Canvas::fromCanvas(QPointF point)
 {
     int dim = data->GetDimCount();
     fvec sample(dim);
+    point.setY(height()-point.y());
     point -= QPointF(width()/2.f,height()/2.f);
     sample[xIndex] = point.x()/(zoom*zooms[xIndex]*height());
     sample[yIndex] = point.y()/(zoom*zooms[yIndex]*height());
@@ -422,8 +451,10 @@ fvec Canvas::fromCanvas(QPointF point)
 
 fvec Canvas::fromCanvas(float x, float y)
 {
+    if(!data) return fvec(2,0);
     int dim = data->GetDimCount();
     fvec sample(dim);
+    y = height() - y;
     x -= width()/2.f;
     y -= height()/2.f;
     sample[xIndex] = x/(zoom*zooms[xIndex]*height());
@@ -436,6 +467,7 @@ fvec Canvas::toSampleCoords(QPointF point)
 {
     int dim = data->GetDimCount();
     fvec sample(dim);
+    point.setY(height() - point.y());
     point -= QPointF(width()/2.f,height()/2.f);
     sample[xIndex] = point.x()/(zoom*zooms[xIndex]*height());
     sample[yIndex] = point.y()/(zoom*zooms[yIndex]*height());
@@ -447,6 +479,7 @@ fvec Canvas::toSampleCoords(float x, float y)
 {
     int dim = data->GetDimCount();
     fvec sample(dim);
+    y = height() - y;
     x -= width()/2.f;
     y -= height()/2.f;
     sample[xIndex] = x/(zoom*zooms[xIndex]*height());
@@ -457,12 +490,12 @@ fvec Canvas::toSampleCoords(float x, float y)
 
 fvec Canvas::canvasTopLeft()
 {
-    return toSampleCoords(0,0);
+    return toSampleCoords(0,height()-1);
 }
 
 fvec Canvas::canvasBottomRight()
 {
-    return toSampleCoords(width()-1,height()-1);
+    return toSampleCoords(width()-1,0);
 }
 
 QRectF Canvas::canvasRect()
@@ -549,17 +582,34 @@ void Canvas::FitToData()
     if(!data->GetCount() && !data->GetTimeSeries().size())
     {
         center = fvec(2,0);
+        zooms = fvec(2, 1.f);
         SetZoom(1);
         //qDebug() << "nothing to fit";
         return;
     }
     int dim = data->GetDimCount();
     center = fvec(dim,0);
+    if(data->GetCount() == 1)
+    {
+        center = data->GetSample(0);
+        zooms = fvec(dim,1.f);
+        SetZoom(1);
+        return;
+    }
     //qDebug() << "fit to data, dim: " << dim;
 
     // we go through all the data and find the boundaries
     std::pair<fvec,fvec> bounds = data->GetBounds();
     fvec mins = bounds.first, maxes = bounds.second;
+    FOR(d, mins.size())
+    {
+        if(maxes[d] - mins[d] > 1e6)
+        {
+            mins[d] = 0;
+            maxes[d] = 1;
+        }
+    }
+
     vector<fvec> samples = data->GetSamples();
 
     vector<TimeSerie>& series = data->GetTimeSeries();
@@ -580,6 +630,15 @@ void Canvas::FitToData()
         }
     }
     fvec diff = maxes - mins;
+    // we add 10% to the edges
+    mins -= diff*.05f;
+    maxes += diff*.05f;
+    diff = maxes - mins;
+
+    FOR(d, diff.size())
+    {
+        if(diff[d] == 0) diff[d] = 1e-6;
+    }
 
     center = mins + diff/2;
 
@@ -596,6 +655,86 @@ void Canvas::FitToData()
     SetZoom(1.f);
 }
 
+void Canvas::DrawLegend(QPainter &painter)
+{
+    int w = painter.viewport().width(), h = painter.viewport().height();
+    QFont font = painter.font();
+    font.setPointSize(10);
+    painter.setFont(font);
+
+    // we draw the reward colorbar
+    if(!maps.reward.isNull())
+    {
+        // we draw the colorbar
+        painter.setRenderHint(QPainter::Antialiasing, false);
+        painter.setOpacity(0.8);
+        int barW = 20;
+        QRect rect(w - barW - 32, 40, barW, 256);
+        painter.setBrush(Qt::NoBrush);
+        for(int i=0; i<rect.height(); i++)
+        {
+            float v = (1.f - i/(float)rect.height())*255.f;
+            v = max(0.f, min(255.f, v));
+            painter.setPen(QColor(255,255-v,255-v));
+            painter.drawLine(rect.x(), rect.y() + i, rect.x() + rect.width(), rect.y() + i);
+        }
+
+        // we draw the values on the colorbar
+        painter.setOpacity(1);
+        int steps = 4;
+        float vmax = 1.0;
+        float vmin = 0.0;
+        for(int i=0; i<steps+1; i++)
+        {
+            float v = (1.f - i/(float)steps);
+            QString text = QString("%1").arg(v*(vmax-vmin) + vmin, 0, 'f', 2);
+            int y = rect.y() + i*rect.height()/steps;
+            QRect textRect = QRect(rect.x()-40, y - 10, 40-6, 20);
+            painter.setPen(Qt::black);
+            painter.drawText(textRect, Qt::AlignRight + Qt::AlignVCenter, text);
+            painter.drawLine(rect.x(), y, rect.x()-4, y);
+        }
+        painter.setPen(QPen(Qt::black, 1));
+        painter.drawRect(rect);
+    }
+    else // we draw the samples legend
+    {
+        if(!data->GetCount()) return;
+        std::map<int,bool> labelList;
+        ivec labels = data->GetLabels();
+        FOR(i, labels.size())
+        {
+            labelList[labels[i]] = true;
+        }
+        painter.setPen(QPen(Qt::black, 1));
+        // we need to know the size of the legend rectangle
+        int rectWidth = 0;
+        QFontMetrics fm = painter.fontMetrics();
+        for(map<int,bool>::iterator it=labelList.begin(); it != labelList.end(); it++)
+        {
+            QString className = GetClassName(it->first);
+            QRect rect = fm.boundingRect(className);
+            rectWidth = max(rectWidth, rect.width());
+        }
+        rectWidth += 10; // we add the sample size;
+
+        int x = w - rectWidth - 40, y = 40;
+        painter.setRenderHint(QPainter::Antialiasing, false);
+        painter.drawRect(x-10,y-10, rectWidth+12, 20*labelList.size());
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        for(map<int,bool>::iterator it=labelList.begin(); it != labelList.end(); it++)
+        {
+            int label = it->first;
+            QPointF point(x, y);
+            drawSample(painter, point, 10, label);
+            QString className = GetClassName(label);
+            painter.drawText(x + 8, point.y()+3, className);
+            //painter.drawText(QRect(x + 4, point.y()-10, 70, 20), Qt::AlignLeft + Qt::AlignCenter, className);
+            y += 20;
+        }
+    }
+}
+
 void Canvas::DrawAxes(QPainter &painter)
 {
     int w = width();
@@ -604,7 +743,9 @@ void Canvas::DrawAxes(QPainter &painter)
     QRectF bounding = canvasRect();
     // we round up the size to the closest decimal
     float scale = bounding.height();
-    if(scale <= 1e-10) return;
+    float scaleRatio = scale / bounding.width();
+    if(scaleRatio > 1000 || 1.f/scaleRatio > 1000) scale = (bounding.height() + bounding.width()) / 2;
+    if(scale <= 1e-5) return;
     float mult = 1;
     if(scale > 10)
     {
@@ -617,26 +758,58 @@ void Canvas::DrawAxes(QPainter &painter)
     if(mult == 0) mult = 1;
 
     // we now have the measure of the ticks, we can draw this
-    painter.setRenderHint(QPainter::TextAntialiasing);
+    painter.setBackgroundMode(Qt::TransparentMode);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    //painter.setRenderHint(QPainter::TextAntialiasing);
+    painter.setBrush(Qt::NoBrush);
     painter.setFont(QFont("Lucida Grande", 9));
+    painter.setPen(QPen(Qt::black, 0.5, Qt::DotLine));
     for(float x = (int)(bounding.x()/mult)*mult; x < bounding.x() + bounding.width(); x += mult)
     {
         float canvasX = toCanvasCoords(x,0).x();
         if(canvasX < 0 || canvasX > w) continue;
-        painter.setPen(QPen(Qt::black, 0.5, Qt::DotLine));
         painter.drawLine(canvasX, 0, canvasX, h);
-        painter.setPen(QPen(Qt::black, 0.5));
-        painter.drawText(canvasX, h-5, QString("%1").arg((int)(x/mult)*mult));
     }
-    // we now have the measure of the ticks, we can draw this
+    painter.setPen(QPen(Qt::black, 0.5, Qt::DotLine));
     for(float y = (int)(bounding.y()/mult)*mult; y < bounding.y() + bounding.height(); y += mult)
     {
         float canvasY = toCanvasCoords(0,y).y();
         if(canvasY < 0 || canvasY > w) continue;
-        painter.setPen(QPen(Qt::black, 0.5, Qt::DotLine));
         painter.drawLine(0, canvasY, w, canvasY);
-        painter.setPen(QPen(Qt::black, 0.5));
+    }
+    painter.setPen(QPen(Qt::black, 0.5));
+    for(float x = (int)(bounding.x()/mult)*mult; x < bounding.x() + bounding.width(); x += mult)
+    {
+        float canvasX = toCanvasCoords(x,0).x();
+        if(canvasX < 0 || canvasX > w) continue;
+        painter.drawText(canvasX, h-5, QString("%1").arg((int)(x/mult)*mult));
+    }
+    // we now have the measure of the ticks, we can draw this
+    painter.setPen(QPen(Qt::black, 0.5));
+    for(float y = (int)(bounding.y()/mult)*mult; y < bounding.y() + bounding.height(); y += mult)
+    {
+        float canvasY = toCanvasCoords(0,y).y();
+        if(canvasY < 0 || canvasY > w) continue;
         painter.drawText(2, canvasY, QString("%1").arg((int)(y/mult)*mult));
+    }
+
+    // we get the dimension names
+    QFont font = painter.font();
+    font.setPointSize(12);
+    painter.setFont(font);
+    if(xIndex < dimNames.size())
+    {
+        QString xlabel = dimNames[xIndex];
+        painter.setPen(QPen(Qt::black, 0.5));
+        painter.drawText(w/2 - 100, h + 10, 200, 10, Qt::AlignTop | Qt::AlignHCenter, xlabel);
+    }
+    if(yIndex < dimNames.size())
+    {
+        QString ylabel = dimNames[yIndex];
+        painter.setPen(QPen(Qt::black, 0.5));
+        painter.rotate(-90);
+        painter.drawText(-h/2-100, -20, 200, 10, Qt::AlignTop | Qt::AlignHCenter, ylabel);
+        painter.rotate(90);
     }
 }
 
@@ -761,7 +934,6 @@ QPainterPath Canvas::DrawObstacle(Obstacle o)
     {
         float X, Y;
         X = aX * cosf(theta);
-        //Y = aY * sinf(theta);
         Y = aY * (theta>=0?1.f:-1.f) * powf((1-powf(cosf(theta),2.f*pX)),1./(2*pY));
 
         float RX = + X * cosf(angle) - Y * sinf(angle);
@@ -1316,7 +1488,16 @@ QPixmap Canvas::GetScreenshot()
     bShowCrosshair = false;
     painter.setBackgroundMode(Qt::OpaqueMode);
     painter.setBackground(Qt::white);
-    PaintStandard(painter);
+    if(!canvasType) PaintStandard(painter);
+    else if(canvasType <= 4) PaintMultivariate(painter, canvasType-1);
+    else
+    {
+        fvec params;
+        params.push_back(xIndex);
+        params.push_back(yIndex);
+        params.push_back(zIndex);
+        PaintVariable(painter, canvasType-5, params);
+    }
     bShowCrosshair = tmp;
     return screenshot;
 }
@@ -1346,6 +1527,20 @@ bool Canvas::DeleteData( QPointF center, float radius )
             anythingDeleted = true;
             data->RemoveObstacle(i);
             i--;
+        }
+    }
+    FOR(i, targets.size())
+    {
+        QPointF targetPoint= toCanvasCoords(targets[i]);
+        QPointF point = this->mapToParent(QPoint(targetPoint.x(), targetPoint.y()));
+        point -= center;
+        if(sqrt(point.x()*point.x() + point.y()*point.y()) < radius)
+        {
+            anythingDeleted = true;
+            targets.erase(targets.begin() + i);
+            targetAge.erase(targetAge.begin() + i);
+            i--;
+            anythingDeleted = true;
         }
     }
     return anythingDeleted;
@@ -1459,4 +1654,16 @@ void Canvas::PaintGradient(QPointF position)
     painter.setBrush(gradient);
     painter.setPen(Qt::NoPen);
     painter.drawRect(maps.reward.rect());
+}
+
+QString Canvas::GetClassName(int classNumber)
+{
+    QString className = QString("Class %1").arg(classNumber);
+    if(classNames.count(classNumber))
+    {
+        QString name = classNames[classNumber];
+        if(name.length() < 3) name = "Class " + name;
+        return name;
+    }
+    return className;
 }

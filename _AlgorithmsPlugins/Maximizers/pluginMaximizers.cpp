@@ -20,14 +20,18 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "interfaceBasic.h"
 #include "interfaceGA.h"
 #include "interfaceParticles.h"
+#include "interfaceParticleFilters.h"
+#include "interfaceNLopt.h"
 
 using namespace std;
 
 PluginMaximizer::PluginMaximizer()
 {
-	maximizers.push_back(new MaximizeBasic());
-	maximizers.push_back(new MaximizeInterfaceGA());
-	maximizers.push_back(new MaximizeInterfaceParticles());
+    maximizers.push_back(new MaximizeBasic());
+    maximizers.push_back(new MaximizeInterfaceGA());
+    maximizers.push_back(new MaximizeInterfaceParticleFilters());
+    maximizers.push_back(new MaximizeInterfaceParticles());
+    maximizers.push_back(new MaximizeInterfaceNLopt());
 }
 
 #ifndef PLUGIN_MAXIMIZE

@@ -1,3 +1,11 @@
+mldemos (0.4.3+git.1.839ca2-1) unstable; urgency=low
+
+  * Track upstream
+  * Update build dependency to libopencv-dev
+  * Bump debian standard version (no changes required)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 15 Oct 2012 08:53:03 +0100
+
 mldemos (0.4.3-1) unstable; urgency=low
 
   * Initial Release.

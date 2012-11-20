@@ -1,0 +1,173 @@
+From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
+Date: Tue, 20 Nov 2012 08:20:08 +0000
+Subject: informations
+
+Spelling/grammar: "informations" to "information".
+"Informations" is not a word.
+---
+ MLDemos/statisticsDialog.ui                             |    2 +-
+ _3rdParty/nlopt/DIRect.c                                |    2 +-
+ _AlgorithmsPlugins/DBSCAN/clustererDBSCAN.cpp           |    6 +++---
+ _AlgorithmsPlugins/Example/classifierExample.cpp        |    2 +-
+ _AlgorithmsPlugins/Example/clustererExample.cpp         |    2 +-
+ _AlgorithmsPlugins/Example/dynamicalExample.cpp         |    2 +-
+ _AlgorithmsPlugins/Example/interfaceExampleClassifier.h |    2 +-
+ _AlgorithmsPlugins/Example/interfaceExampleDynamic.h    |    2 +-
+ _AlgorithmsPlugins/Example/regressorExample.cpp         |    2 +-
+ _AlgorithmsPlugins/GP/classifierGP.cpp                  |    2 +-
+ _AlgorithmsPlugins/GP/interfaceGPClassifier.h           |    2 +-
+ 11 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/MLDemos/statisticsDialog.ui b/MLDemos/statisticsDialog.ui
+index 0d8fd27..0f5e808 100644
+--- a/MLDemos/statisticsDialog.ui
++++ b/MLDemos/statisticsDialog.ui
+@@ -27,7 +27,7 @@
+      </property>
+      <widget class="QWidget" name="algoTab">
+       <attribute name="title">
+-       <string>Help and Informations</string>
++       <string>Help and Information</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <property name="margin">
+diff --git a/_3rdParty/nlopt/DIRect.c b/_3rdParty/nlopt/DIRect.c
+index f0a7c1a..c84a0a7 100644
+--- a/_3rdParty/nlopt/DIRect.c
++++ b/_3rdParty/nlopt/DIRect.c
+@@ -139,7 +139,7 @@
+ /* |            as described by Jones et.al. (0) or use our modification(1)| */
+ /* | logfile -- File-Handle for the logfile. DIRECT expects this file to be| */
+ /* |            opened and closed by the user outside of DIRECT. We moved  | */
+-/* |            this to the outside so the user can add extra informations | */
++/* |            this to the outside so the user can add extra information  | */
+ /* |            to this file before and after the call to DIRECT.          | */
+ /* | fglobal -- Function value of the global optimum. If this value is not | */
+ /* |            known (that is, we solve a real problem, not a testproblem)| */
+diff --git a/_AlgorithmsPlugins/DBSCAN/clustererDBSCAN.cpp b/_AlgorithmsPlugins/DBSCAN/clustererDBSCAN.cpp
+index ee4c942..3984d15 100644
+--- a/_AlgorithmsPlugins/DBSCAN/clustererDBSCAN.cpp
++++ b/_AlgorithmsPlugins/DBSCAN/clustererDBSCAN.cpp
+@@ -138,15 +138,15 @@ const char *ClustererDBSCAN::GetInfoString()
+     char *text = new char[1024];
+     if (_type==0)
+     {
+-        sprintf(text, "DBSCAN\n\nTraining informations: minPts : %d, eps: %f, metric: %d\n",_minPts,_eps,_metric);
++        sprintf(text, "DBSCAN\n\nTraining information: minPts : %d, eps: %f, metric: %d\n",_minPts,_eps,_metric);
+     }
+     else if (_type==1)
+     {
+-        sprintf(text, "OPTICS\n\nTraining informations: minPts : %d, eps: %f, depth: %f, metric: %d\n",_minPts,_eps,_depth,_metric);
++        sprintf(text, "OPTICS\n\nTraining information: minPts : %d, eps: %f, depth: %f, metric: %d\n",_minPts,_eps,_depth,_metric);
+     }
+     else
+     {
+-        sprintf(text, "OPTICS WP\n\nTraining informations: minPts : %d, eps: %f, depth: %f, metric: %d\n",_minPts,_eps,_depth,_metric);
++        sprintf(text, "OPTICS WP\n\nTraining information: minPts : %d, eps: %f, depth: %f, metric: %d\n",_minPts,_eps,_depth,_metric);
+     }
+ 
+     sprintf(text, "%sNumber of clusters: %d\n",text,_clusters.size());
+diff --git a/_AlgorithmsPlugins/Example/classifierExample.cpp b/_AlgorithmsPlugins/Example/classifierExample.cpp
+index d51243c..1df9ea7 100644
+--- a/_AlgorithmsPlugins/Example/classifierExample.cpp
++++ b/_AlgorithmsPlugins/Example/classifierExample.cpp
+@@ -112,7 +112,7 @@ const char *ClassifierExample::GetInfoString()
+     char *text = new char[1024];
+     sprintf(text, "My Classifier Example\n");
+     sprintf(text, "%s\n", text);
+-    sprintf(text, "%sTraining informations:\n", text);
++    sprintf(text, "%sTraining information:\n", text);
+ 
+     // here you can fill in whatever information you want
+     for(map<int,fvec>::iterator it=centers.begin(); it != centers.end(); it++)
+diff --git a/_AlgorithmsPlugins/Example/clustererExample.cpp b/_AlgorithmsPlugins/Example/clustererExample.cpp
+index bf9b3d8..03563d6 100644
+--- a/_AlgorithmsPlugins/Example/clustererExample.cpp
++++ b/_AlgorithmsPlugins/Example/clustererExample.cpp
+@@ -48,7 +48,7 @@ const char *ClustererExample::GetInfoString()
+     char *text = new char[1024];
+     sprintf(text, "My Clusterer Example\n");
+     sprintf(text, "\n");
+-    sprintf(text, "Training informations:\n");
++    sprintf(text, "Training information:\n");
+ 
+     // here you can fill in whatever information you want
+ 
+diff --git a/_AlgorithmsPlugins/Example/dynamicalExample.cpp b/_AlgorithmsPlugins/Example/dynamicalExample.cpp
+index 55c9896..871b984 100644
+--- a/_AlgorithmsPlugins/Example/dynamicalExample.cpp
++++ b/_AlgorithmsPlugins/Example/dynamicalExample.cpp
+@@ -83,7 +83,7 @@ const char *DynamicalExample::GetInfoString()
+ 	char *text = new char[1024];
+     sprintf(text, "My Dynamical Example\n");
+     sprintf(text, "\n");
+-    sprintf(text, "Training informations:\n");
++    sprintf(text, "Training information:\n");
+ 
+     // here you can fill in whatever information you want
+ 
+diff --git a/_AlgorithmsPlugins/Example/interfaceExampleClassifier.h b/_AlgorithmsPlugins/Example/interfaceExampleClassifier.h
+index f5eaed0..99a1440 100644
+--- a/_AlgorithmsPlugins/Example/interfaceExampleClassifier.h
++++ b/_AlgorithmsPlugins/Example/interfaceExampleClassifier.h
+@@ -74,7 +74,7 @@ public:
+     QString GetInfoFile(){return "Example.html";}
+ 
+     /*!
+-      Determines whether the plugin requires a timer to query informations from it
++      Determines whether the plugin requires a timer to query information from it
+       */
+     bool UsesDrawTimer(){return true;}
+ 
+diff --git a/_AlgorithmsPlugins/Example/interfaceExampleDynamic.h b/_AlgorithmsPlugins/Example/interfaceExampleDynamic.h
+index aff4b48..8b7c10b 100644
+--- a/_AlgorithmsPlugins/Example/interfaceExampleDynamic.h
++++ b/_AlgorithmsPlugins/Example/interfaceExampleDynamic.h
+@@ -74,7 +74,7 @@ public:
+     QString GetInfoFile(){return "Example.html";}
+ 
+     /*!
+-      Determines whether the plugin requires a timer to query informations from it
++      Determines whether the plugin requires a timer to query information from it
+       */
+     bool UsesDrawTimer(){return true;}
+ 
+diff --git a/_AlgorithmsPlugins/Example/regressorExample.cpp b/_AlgorithmsPlugins/Example/regressorExample.cpp
+index 4008d6c..3ab325d 100644
+--- a/_AlgorithmsPlugins/Example/regressorExample.cpp
++++ b/_AlgorithmsPlugins/Example/regressorExample.cpp
+@@ -56,7 +56,7 @@ const char *RegressorExample::GetInfoString()
+     char *text = new char[1024];
+     sprintf(text, "My Regressor Example\n");
+     sprintf(text, "\n");
+-    sprintf(text, "Training informations:\n");
++    sprintf(text, "Training information:\n");
+ 
+     // here you can fill in whatever information you want
+ 
+diff --git a/_AlgorithmsPlugins/GP/classifierGP.cpp b/_AlgorithmsPlugins/GP/classifierGP.cpp
+index cb9a5b1..4e56103 100644
+--- a/_AlgorithmsPlugins/GP/classifierGP.cpp
++++ b/_AlgorithmsPlugins/GP/classifierGP.cpp
+@@ -268,7 +268,7 @@ const char *ClassifierGP::GetInfoString()
+     char *text = new char[1024];
+     sprintf(text, "My Classifier Example\n");
+     sprintf(text, "%s\n", text);
+-    sprintf(text, "%sTraining informations:\n", text);
++    sprintf(text, "%sTraining information:\n", text);
+ 
+     // here you can fill in whatever information you want
+     for(map<int,fvec>::iterator it=centers.begin(); it != centers.end(); it++)
+diff --git a/_AlgorithmsPlugins/GP/interfaceGPClassifier.h b/_AlgorithmsPlugins/GP/interfaceGPClassifier.h
+index cc13b42..03a8958 100644
+--- a/_AlgorithmsPlugins/GP/interfaceGPClassifier.h
++++ b/_AlgorithmsPlugins/GP/interfaceGPClassifier.h
+@@ -74,7 +74,7 @@ public:
+     QString GetInfoFile(){return "GP.html";}
+ 
+     /*!
+-      Determines whether the plugin requires a timer to query informations from it
++      Determines whether the plugin requires a timer to query information from it
+       */
+     bool UsesDrawTimer(){return true;}
+ 

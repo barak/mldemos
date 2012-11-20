@@ -9,10 +9,10 @@ system directory in which the plugins subdirectory is installed.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MLDemos/mldemos.cpp b/MLDemos/mldemos.cpp
-index 166e1b0..b6a291b 100644
+index cbec5c9..e4d63db 100644
 --- a/MLDemos/mldemos.cpp
 +++ b/MLDemos/mldemos.cpp
-@@ -455,7 +455,7 @@ void MLDemos::initDialogs()
+@@ -527,7 +527,7 @@ void MLDemos::initDialogs()
  void MLDemos::initPlugins()
  {
      qDebug() << "Importing plugins";

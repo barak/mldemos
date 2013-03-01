@@ -5,14 +5,14 @@ Subject: hardwire plugin directory
 Set directory to scan for plugins subdirectory containing plugins to
 system directory in which the plugins subdirectory is installed.
 ---
- MLDemos/mldemos.cpp |    2 +-
+ MLDemos/mldemos.cpp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MLDemos/mldemos.cpp b/MLDemos/mldemos.cpp
-index cbec5c9..e4d63db 100644
+index 974148a..003bd06 100644
 --- a/MLDemos/mldemos.cpp
 +++ b/MLDemos/mldemos.cpp
-@@ -527,7 +527,7 @@ void MLDemos::initDialogs()
+@@ -597,7 +597,7 @@ void MLDemos::initDialogs()
  void MLDemos::initPlugins()
  {
      qDebug() << "Importing plugins";

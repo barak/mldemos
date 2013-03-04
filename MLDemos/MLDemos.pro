@@ -74,20 +74,20 @@ HEADERS += basicMath.h \
     datagenerator.h \
     gridsearch.h \
     visualization.h \
-    dataseteditor.h
+    dataseteditor.h \
+    algorithmmanager.h
 
 SOURCES += \
 	main.cpp \
 	mldemos.cpp \
-    mlprocessing.cpp \
     mlstats.cpp \
 	mlsaving.cpp \
     compare.cpp \
-    mltrain.cpp \
     datagenerator.cpp \
     gridsearch.cpp \
     visualization.cpp \
-    dataseteditor.cpp
+    dataseteditor.cpp \
+    algorithmmanager.cpp
 
 OTHER_FILES += \
     shaders/drawSamples.fsh \

@@ -651,6 +651,7 @@ void Draw3DClassifier(GLWidget *glw, Classifier *classifier)
     int xIndex = glw->canvas->xIndex;
     int yIndex = glw->canvas->yIndex;
     int zIndex = glw->canvas->zIndex;
+    if(zIndex < 0 || zIndex > dim) return;
     FOR(i, samples.size())
     {
         FOR(d, dim)
@@ -849,6 +850,7 @@ void Draw3DClusterer(GLWidget *glw, Clusterer *clusterer)
     int xIndex = glw->canvas->xIndex;
     int yIndex = glw->canvas->yIndex;
     int zIndex = glw->canvas->zIndex;
+    if(zIndex < 0 || zIndex > dim) return;
     FOR(i, samples.size())
     {
         FOR(d, dim)
@@ -866,7 +868,6 @@ void Draw3DClusterer(GLWidget *glw, Clusterer *clusterer)
     mins = center - dists*2;
     maxes = center + dists*2;
 
-    bool bMultiClass = false;
     // and now we draw a volume
     int steps = 64;
     fvec sample(dim);
@@ -965,7 +966,7 @@ void Draw3DClusterer(GLWidget *glw, Clusterer *clusterer)
             QColor color = SampleColor[(c+1)%SampleColorCnt];
             o.objectType = "Surfaces";
             o.style = "smooth,transparent,blurry:1";
-            o.style += QString("color:%1:%2:%3:0.3").arg(color.redF()).arg(color.greenF()).arg(color.blueF());
+            o.style += QString(",color:%1:%2:%3:0.4").arg(color.redF()).arg(color.greenF()).arg(color.blueF());
             o.style += QString(",offset:%1").arg((float)c,0,'f',2);
             glw->mutex->lock();
             glw->AddObject(o);
@@ -1013,7 +1014,7 @@ void Draw3DClusterer(GLWidget *glw, Clusterer *clusterer)
         }
 
         o.objectType = "Surfaces";
-        o.style = "smooth,transparent,blurry:1,color:1:1:1:0.4";
+        o.style = "smooth,transparent,blurry:1,color:0:0:0:0.3";
         glw->mutex->lock();
         glw->AddObject(o);
         glw->mutex->unlock();
@@ -1362,6 +1363,7 @@ GLObject DrawStreamTubes(vector<Streamline> streams, float diff, float maxSpeed,
     FOR(i, streams.size())
     {
         if(streams[i].length < 2) continue;
+        int dim = streams[i][0].size();
         float radius = diff*0.001;
         QVector3D p1, p2;
         vector<QVector3D> oldCircle;
@@ -1371,8 +1373,8 @@ GLObject DrawStreamTubes(vector<Streamline> streams, float diff, float maxSpeed,
         FOR(j, streams[i].length-1)
         {
             QVector3D d;
-            p1 = QVector3D(streams[i][j][xInd],streams[i][j][yInd],streams[i][j][zInd]);
-            p2 = QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],streams[i][j+1][zInd]);
+            p1 = QVector3D(streams[i][j][xInd],streams[i][j][yInd],zInd >= 0 && zInd < dim ? streams[i][j][zInd] : 0);
+            p2 = QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],zInd >= 0 && zInd < dim ? streams[i][j+1][zInd] : 0);
             QVector3D dn = (p2-p1);
             d = dn.normalized();
             float speed = dn.length();
@@ -1469,6 +1471,7 @@ GLObject DrawStreamRibbon(vector<Streamline> streams, Dynamical *dynamical, vect
     FOR(i, streams.size())
     {
         if(streams[i].length < 2) continue;
+        int dim = streams[i][0].size();
         float radius = diff*0.05;
         QVector3D p1, p2, q1, q2;
         QVector3D pos;
@@ -1476,8 +1479,8 @@ GLObject DrawStreamRibbon(vector<Streamline> streams, Dynamical *dynamical, vect
         // we generate the twin trajectory
         vector<fvec> twin;
         fvec sample(3);
-        p1 = QVector3D(streams[i][0][xInd],streams[i][0][yInd],streams[i][0][zInd]);
-        p2 = QVector3D(streams[i][1][xInd],streams[i][1][yInd],streams[i][1][zInd]);
+        p1 = QVector3D(streams[i][0][xInd],streams[i][0][yInd],zInd >= 0 && zInd < dim ? streams[i][0][zInd] : 0);
+        p2 = QVector3D(streams[i][1][xInd],streams[i][1][yInd],zInd >= 0 && zInd < dim ? streams[i][1][zInd] : 0);
         QVector3D d = (p2-p1).normalized();
         if(d.z() != 0)
         {
@@ -1494,7 +1497,7 @@ GLObject DrawStreamRibbon(vector<Streamline> streams, Dynamical *dynamical, vect
         q1 = pos + p1;
         sample[xInd] = pos.x()*radius + p1.x();
         sample[yInd] = pos.y()*radius + p1.y();
-        sample[zInd] = pos.z()*radius + p1.z();
+        if(zInd >= 0 && zInd < dim) sample[zInd] = pos.z()*radius + p1.z();
         twin.push_back(sample);
         FOR(j, streams[i].length-1)
         {
@@ -1518,10 +1521,10 @@ GLObject DrawStreamRibbon(vector<Streamline> streams, Dynamical *dynamical, vect
         float oldSpeed = 0;
         FOR(j, streams[i].length-1)
         {
-            p1 = QVector3D(streams[i][j][xInd],streams[i][j][yInd],streams[i][j][zInd]);
-            p2 = QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],streams[i][j+1][zInd]);
-            q1 = QVector3D(twin[j][xInd],twin[j][yInd],twin[j][zInd]);
-            q2 = QVector3D(twin[j+1][xInd],twin[j+1][yInd],twin[j+1][zInd]);
+            p1 = QVector3D(streams[i][j][xInd],streams[i][j][yInd],zInd >= 0 && zInd < dim ? streams[i][j][zInd] : 0);
+            p2 = QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],zInd >= 0 && zInd < dim ? streams[i][j+1][zInd] : 0);
+            q1 = QVector3D(twin[j][xInd],twin[j][yInd],zInd >= 0 && zInd < dim ? twin[j][zInd] : 0);
+            q2 = QVector3D(twin[j+1][xInd],twin[j+1][yInd],zInd >= 0 && zInd < dim ? twin[j+1][zInd] : 0);
             float speed = (p2-p1).length();
             speed += (q2-q1).length();
             speed /= 2;
@@ -1552,11 +1555,13 @@ GLObject DrawStreamLines(vector<Streamline> streams, int xInd, int yInd, int zIn
 //    o.style = QString("fading:%1").arg(steps);
     FOR(i, streams.size())
     {
+        if(!streams[i].length) continue;
+        int dim = streams[i][0].size();
         QColor c = SampleColor[streams[i].cluster%(SampleColorCnt-1)+1];
         FOR(j, streams[i].length-1)
         {
-            o.vertices.append(QVector3D(streams[i][j][xInd],streams[i][j][yInd],streams[i][j][zInd]));
-            o.vertices.append(QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],streams[i][j+1][zInd]));
+            o.vertices.append(QVector3D(streams[i][j][xInd],streams[i][j][yInd],zInd >= 0 && zInd < dim ? streams[i][j][zInd] : 0));
+            o.vertices.append(QVector3D(streams[i][j+1][xInd],streams[i][j+1][yInd],zInd >= 0 && zInd < dim ? streams[i][j+1][zInd] : 0));
             o.colors.append(QVector4D(c.redF(), c.greenF(), c.blueF(),1));
             o.colors.append(QVector4D(c.redF(), c.greenF(), c.blueF(),1));
         }
@@ -1573,6 +1578,7 @@ void Draw3DDynamical(GLWidget *glw, Dynamical *dynamical, int displayStyle)
     int xInd = glw->canvas->xIndex;
     int yInd = glw->canvas->yIndex;
     int zInd = glw->canvas->zIndex;
+    if(zInd < 0 || zInd >= dim) return;
     vector<fvec> samples = glw->canvas->data->GetSamples();
     vector< vector<fvec> > trajectories = glw->canvas->data->GetTrajectories(glw->canvas->trajectoryResampleType, glw->canvas->trajectoryResampleCount, glw->canvas->trajectoryCenterType, dT, true);
     vector<Obstacle> obstacles = glw->canvas->data->GetObstacles();

@@ -1,19 +1,19 @@
 From: "Barak A. Pearlmutter" <barak+git@cs.nuim.ie>
-Date: Mon, 30 May 2011 20:21:12 +0100
+Date: Mon, 4 Mar 2013 10:59:05 +0000
 Subject: hardwire plugin directory
 
 Set directory to scan for plugins subdirectory containing plugins to
 system directory in which the plugins subdirectory is installed.
 ---
- MLDemos/mldemos.cpp | 2 +-
+ MLDemos/algorithmmanager.cpp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/MLDemos/mldemos.cpp b/MLDemos/mldemos.cpp
-index 974148a..003bd06 100644
---- a/MLDemos/mldemos.cpp
-+++ b/MLDemos/mldemos.cpp
-@@ -597,7 +597,7 @@ void MLDemos::initDialogs()
- void MLDemos::initPlugins()
+diff --git a/MLDemos/algorithmmanager.cpp b/MLDemos/algorithmmanager.cpp
+index c0d20e1..f7a9314 100644
+--- a/MLDemos/algorithmmanager.cpp
++++ b/MLDemos/algorithmmanager.cpp
+@@ -245,7 +245,7 @@ AlgorithmManager::~AlgorithmManager()
+ void AlgorithmManager::LoadPlugins()
  {
      qDebug() << "Importing plugins";
 -    QDir pluginsDir = QDir(qApp->applicationDirPath());

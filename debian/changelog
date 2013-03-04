@@ -1,10 +1,11 @@
-mldemos (0.4.3+git.1.b2fb3f-1) unstable; urgency=low
+mldemos (0.5.1-1) unstable; urgency=low
 
-  * Track upstream
-  * Update build dependency to libopencv-dev
+  * New upstream release
   * Bump debian standard version (no changes required)
+  * Update plugin directory quilt patch due to code motion
+  * Build dependencies: libopencv-dev, libqt4-opengl-dev, libboost-dev
 
- -- Barak A. Pearlmutter <bap@debian.org>  Mon, 19 Nov 2012 15:09:12 +0000
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 04 Mar 2013 11:55:41 +0000
 
 mldemos (0.4.3-1) unstable; urgency=low
 

@@ -1,3 +1,9 @@
+mldemos (0.5.1-2) unstable; urgency=low
+
+  * Work around qreal being float on an ARM (closes: #718751)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 12 Aug 2013 18:38:33 +0200
+
 mldemos (0.5.1-1) unstable; urgency=low
 
   * New upstream release

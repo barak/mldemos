@@ -59,6 +59,7 @@ GLWidget::GLWidget(Canvas *canvas, QWidget *parent)
 {
     this->canvas = canvas;
     this->zoomFactor = ZoomZero;
+    bHiDPI = (qApp->devicePixelRatio() > 1);
     mutex = new QMutex();
     bDisplaySamples=bDisplayLines=bDisplaySurfaces=bDisplayTransparency=bDisplayBlurry=true;
     bRotateCamera=false;
@@ -574,6 +575,7 @@ void GLWidget::DrawSamples(const GLObject &o) const
             }
         }
     }
+    if(bHiDPI) pointSize *= 2;
 
     QGLShaderProgram *program = bDisplayShadows ? shaders.at("SamplesShadow") : shaders.at("Samples");
     program->bind();
@@ -680,7 +682,22 @@ void GLWidget::DrawLines(const GLObject &o) const
     }
 
     glPushMatrix();
+
+#include <qglobal.h>
+    // qreal might be a float, need to account for that here.
+    // No choice but to use the logic in Qt/qglobal.h
+#if defined(QT_COORD_TYPE)
+    // typedef QT_COORD_TYPE qreal;
+    // (which we'll just assume is a double)
     glMultMatrixd(o.model.constData());
+#elif defined(QT_NO_FPU) || defined(QT_ARCH_ARM) || defined(QT_ARCH_WINDOWSCE) || defined(QT_ARCH_SYMBIAN)
+    // typedef float qreal;
+    glMultMatrixf(o.model.constData());
+#else
+    // typedef double qreal;
+    glMultMatrixf(o.model.constData());
+#endif
+
     if(o.objectType.contains("linestrip") || o.objectType.contains("trajectories")) glBegin(GL_LINE_STRIP);
     else glBegin(GL_LINES);
     FOR(i, o.vertices.size())

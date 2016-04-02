@@ -10,7 +10,8 @@ include($$MLPATH/MLDemos_variables.pri)
 ###########################
 # Source Files            #
 ###########################
-FORMS += paramsSVM.ui paramsSVMcluster.ui paramsSVMregr.ui paramsSVMdynamic.ui paramsKM.ui paramsMVM.ui paramsRVM.ui paramsRVMregr.ui
+FORMS += paramsSVM.ui paramsSVMcluster.ui paramsSVMregr.ui paramsSVMdynamic.ui paramsKM.ui paramsMVM.ui paramsRVM.ui paramsRVMregr.ui \
+    paramsMRVM.ui
 HEADERS +=	\
 			canvas.h \
 			datasetManager.h \
@@ -36,7 +37,10 @@ HEADERS +=	\
             interfaceRVMClassifier.h \
             interfaceRVMRegress.h \
             interfaceKMCluster.h \
-            pluginKernel.h
+            dlibTypes.h \
+            pluginKernel.h \
+    interfaceMRVMClassifier.h \
+    classifierMRVM.h
 SOURCES += 	\
 			svm.cpp \
             classifierSVM.cpp \
@@ -59,7 +63,9 @@ SOURCES += 	\
             interfaceRVMClassifier.cpp \
             interfaceRVMRegress.cpp \
             interfaceKMCluster.cpp \
-            pluginKernel.cpp
+            pluginKernel.cpp \
+    interfaceMRVMClassifier.cpp \
+    classifierMRVM.cpp
 
 ###########################
 # Dependencies            #
@@ -174,3 +180,6 @@ HEADERS +=	\
 	newmat11/newmatrm.h \
 	newmat11/precisio.h \
 	newmat11/solution.h
+
+OTHER_FILES += \
+    plugin.json

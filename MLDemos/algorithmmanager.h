@@ -15,6 +15,7 @@
 #include "widget.h"
 #include "drawTimer.h"
 #include "gridsearch.h"
+#include "basewidget.h"
 
 #include "ui_algorithmOptions.h"
 #include "ui_optsClassify.h"
@@ -34,7 +35,7 @@ class AlgorithmManager : public QObject
     Q_OBJECT
 
 public:
-    QWidget *algorithmWidget;
+    BaseWidget *algorithmWidget;
     QWidget *regressWidget;
     QWidget *dynamicWidget;
     QWidget *classifyWidget;
@@ -42,8 +43,6 @@ public:
     QWidget *maximizeWidget;
     QWidget *reinforcementWidget;
     QWidget *projectWidget;
-
-    QMenu *menuInput_Output, *menuImport;
 
     Ui::algorithmOptions *options;
     Ui::optionsClassifyWidget *optionsClassify;
@@ -103,16 +102,16 @@ public:
                      CompareAlgorithms *compare,
                      GridSearch *gridSearch);
     ~AlgorithmManager();
-    void LoadPlugins();
-    void AddPlugin(ClassifierInterface *iClassifier, const char *method);
-    void AddPlugin(ClustererInterface *iCluster, const char *method);
-    void AddPlugin(RegressorInterface *iRegress, const char *method);
-    void AddPlugin(DynamicalInterface *iDynamical, const char *method);
-    void AddPlugin(AvoidanceInterface *iAvoid, const char *method);
-    void AddPlugin(MaximizeInterface *iMaximize, const char *method);
-    void AddPlugin(ReinforcementInterface *iReinforcement, const char *method);
-    void AddPlugin(ProjectorInterface *iProject, const char *method);
-    void AddPlugin(InputOutputInterface *iIO);
+
+    void SetAlgorithms(QList<ClassifierInterface *> classifiers,
+                      QList<ClustererInterface *> clusterers,
+                      QList<RegressorInterface *> regressors,
+                      QList<DynamicalInterface *> dynamicals,
+                      QList<AvoidanceInterface *> avoiders,
+                      QList<MaximizeInterface *> maximizers,
+                      QList<ReinforcementInterface *> reinforcements,
+                      QList<ProjectorInterface *> projectors,
+                      QList<InputOutputInterface *> inputoutputs);
 
     bool Train(Classifier *classifier, float trainRatio=1, bvec trainList = bvec(), int positiveIndex=-1,
                std::vector<fvec> samples=std::vector<fvec>(), ivec labels=ivec());
@@ -178,10 +177,6 @@ public slots:
     void ClusterChanged();
     void SetAlgorithmWidget();
 
-    // input/output plugins
-    void ActivateIO();
-    void ActivateImport();
-    void DisactivateIO(QObject *);
     void QueryClassifier(std::vector<fvec> samples);
     void QueryRegressor(std::vector<fvec> samples);
     void QueryDynamical(std::vector<fvec> samples);

@@ -324,7 +324,7 @@ void GHSOMProjector::DrawGL(Canvas *canvas, GLWidget *glw, Projector *projector)
             FOR(i, points.size())
             {
                 fvec point = points[i];
-                QColor c = SampleColor[layerCount%SampleColorCnt];
+                QColor c = SampleColor[(layerCount+1)%SampleColorCnt];
                 GLWidget::glSample(point, c, xIndex, yIndex, zIndex);
             }
             glEnd();
@@ -448,7 +448,7 @@ void GHSOMProjector::DrawModel(Canvas *canvas, QPainter &painter, Projector *pro
             {
                 NeuronLayer *le = layer->elementAt(j);
                 if(!le) continue;
-                printf("\t(%d x %d) units\t0x%x\n", le->getX(), le->getY(), le->getSuperNeuron());
+		printf("\t(%d x %d) units\t0x%lx\n", le->getX(), le->getY(), (unsigned long)le->getSuperNeuron());
                 Neuron ***map = le->getMap();
                 FOR(y, le->getY())
                 {
@@ -527,4 +527,4 @@ bool GHSOMProjector::LoadParams(QString name, float value)
     return true;
 }
 
-Q_EXPORT_PLUGIN2(mld_GHSOM, GHSOMProjector)
+//Q_EXPORT_PLUGIN2(mld_GHSOM, GHSOMProjector)

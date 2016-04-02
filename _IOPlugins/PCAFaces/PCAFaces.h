@@ -28,7 +28,8 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 class PCAFaces : public QObject, public InputOutputInterface
 {
 	Q_OBJECT
-	Q_INTERFACES(InputOutputInterface)
+    Q_PLUGIN_METADATA(IID "PCAFaces" FILE "plugin.json")
+    Q_INTERFACES(InputOutputInterface)
 public:
 	const char* QueryClassifierSignal() {return SIGNAL(QueryClassifier(std::vector<fvec>));}
 	const char* QueryRegressorSignal() {return SIGNAL(QueryRegressor(std::vector<fvec>));}
@@ -51,6 +52,17 @@ public:
     PCAProjector *projector;
 	PCAFaces();
 	~PCAFaces();
+private:
+
+    QFutureWatcher<void> futureWatcher;
+    void setButtons(bool bStatus);
+
+
+public slots:
+
+    void setButtonsOn();
+    void setButtonsOff();
+
 signals:
 	void Done(QObject *);
     void SetData(std::vector<fvec> samples, ivec labels, std::vector<ipair> trajectories, bool bProjected);
@@ -65,6 +77,7 @@ public slots:
 	void FetchResults(std::vector<fvec> results);
 	void Closing();
 	void Updating();
+    void ConcurrentUpdate();
 };
 
 #endif // _INTERFACEPCAFACES_H_

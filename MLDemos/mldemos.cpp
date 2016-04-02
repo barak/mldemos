@@ -34,7 +34,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <matio/matio.h>
 #include "optimization_test_functions.h"
 
-MLDemos::MLDemos(QString filename, QWidget *parent, Qt::WFlags flags)
+MLDemos::MLDemos(QString filename, QWidget *parent, Qt::WindowFlags flags)
     : QMainWindow(parent, flags),
       canvas(0),glw(0),vis(0),
       gridSearch(0),
@@ -47,6 +47,12 @@ MLDemos::MLDemos(QString filename, QWidget *parent, Qt::WFlags flags)
     QApplication::setWindowIcon(QIcon(":/MLDemos/logo.png"));
     ui.setupUi(this);
     setAcceptDrops(true);
+
+#ifdef QT_OPENGL_ES_2
+    qDebug() << "OpenGL ES 2";
+#else
+    qDebug() << "OpenGL 2.1";
+#endif
 
     connect(ui.actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(ShowAbout()));
@@ -65,7 +71,7 @@ MLDemos::MLDemos(QString filename, QWidget *parent, Qt::WFlags flags)
     initDialogs();
     initToolBars();
 
-    algo->LoadPlugins();
+    plugin->LoadPlugins();
 
     LoadLayoutOptions();
     SetTextFontSize();
@@ -157,6 +163,7 @@ void MLDemos::initToolBars()
     actionShowStats->setCheckable(true);
 
     connect(actionAlgorithms, SIGNAL(triggered()), this, SLOT(ShowAlgorithmOptions()));
+    connect(actionAlgorithms,SIGNAL(triggered()),this, SLOT(HideAlgorithmOptions()));
     connect(actionCompare, SIGNAL(triggered()), this, SLOT(ShowOptionCompare()));
     connect(actionDrawSamples, SIGNAL(triggered()), this, SLOT(ShowSampleDrawing()));
     connect(actionDisplayOptions, SIGNAL(triggered()), this, SLOT(ShowOptionDisplay()));
@@ -377,10 +384,9 @@ void MLDemos::initDialogs()
     drawTimer = new DrawTimer(canvas, &mutex);
     drawTimer->glw = glw;
     algo = new AlgorithmManager(this, canvas, glw, &mutex, drawTimer, compare, gridSearch);
-    algo->menuImport = ui.menuImport;
-    algo->menuInput_Output= ui.menuInput_Output;
     algo->inputDimensions = inputDimensions;
     algo->manualSelection = manualSelection;
+    plugin = new PluginManager(this, algo);
 
     connect(generator, SIGNAL(finished(int)), this, SLOT(HideAddData()));
 
@@ -617,10 +623,10 @@ void MLDemos::resizeEvent(QResizeEvent *event)
     CanvasMoveEvent();
 }
 
-
 void MLDemos::AlgoChanged()
 {
     if(!algo) return;
+
     algo->SetAlgorithmWidget();
 
     ChangeInfoFile();
@@ -640,12 +646,24 @@ void MLDemos::AlgoChanged()
             drawToolbar->sprayButton->setChecked(true);
         }
     }
+    if (!algo->options->tabClust->isVisible()) {
+        algo->options->tabWidget->resize(635,193);
+    }
 }
 
 void MLDemos::ShowAlgorithmOptions()
 {
-    if (actionAlgorithms->isChecked()) algo->algorithmWidget->show();
-    else algo->algorithmWidget->hide();
+    std::cout<< "ShowAlgorithmOptions" << std::endl;
+    if (actionAlgorithms->isChecked()){
+        algo->algorithmWidget->show();
+        algo->SetAlgorithmWidget();
+    }else{ algo->algorithmWidget->hide();
+
+    }
+}
+
+void MLDemos::RestAlgorithmOptionsButton(){
+    actionAlgorithms->setChecked(false);
 }
 
 void MLDemos::ShowOptionCompare()
@@ -658,6 +676,10 @@ void MLDemos::ShowGridSearch()
 {
     if (actionGridsearch->isChecked()) gridSearch->show();
     else gridSearch->hide();
+}
+
+void MLDemos::ResetGridSearchButton(){
+    actionGridsearch->setChecked(false);
 }
 
 void MLDemos::ShowSampleDrawing()
@@ -2205,7 +2227,7 @@ void MLDemos::Save(QString filename)
     }
     file.close();
     if (!canvas->maps.reward.isNull()) RewardFromMap(canvas->maps.reward.toImage());
-    canvas->data->Save(filename.toAscii());
+    canvas->data->Save(filename.toLatin1());
     SaveParams(filename);
     ui.statusBar->showMessage("Data saved successfully");
 }
@@ -2228,7 +2250,7 @@ void MLDemos::Load(QString filename)
     }
     file.close();
     ClearData();
-    canvas->data->Load(filename.toAscii());
+    canvas->data->Load(filename.toLatin1());
     MapFromReward();
     LoadParams(filename);
     //    QImage reward(filename + "-reward.png");
@@ -2292,7 +2314,7 @@ void MLDemos::dropEvent(QDropEvent *event)
         if (filename.toLower().endsWith(".ml"))
         {
             ClearData();
-            canvas->data->Load(filename.toAscii());
+            canvas->data->Load(filename.toLatin1());
             MapFromReward();
             LoadParams(filename);
             ui.statusBar->showMessage("Data loaded successfully");
@@ -2345,6 +2367,10 @@ void MLDemos::Screenshot()
         if (!img.save(filename)) ui.statusBar->showMessage("WARNING: Unable to save image");
         else ui.statusBar->showMessage("Image saved successfully");
     }
+    else if(canvas->canvasType == 2) {
+        if (!vis->SaveScreenshot(filename)) ui.statusBar->showMessage("WARNING: Unable to save image");
+        else ui.statusBar->showMessage("Image saved successfully");
+    }
     else
     {
         if (!canvas->SaveScreenshot(filename)) ui.statusBar->showMessage("WARNING: Unable to save image");
@@ -2359,6 +2385,10 @@ void MLDemos::ToClipboard()
         QImage img = glw->grabFrameBuffer();
         clipboard->setImage(img);
         clipboard->setPixmap(QPixmap::fromImage(img));
+    } else if (canvas->canvasType == 2) {
+        QPixmap pixmap = vis->GetDisplayPixmap();
+        clipboard->setPixmap(pixmap);
+        clipboard->setImage(pixmap.toImage());
     } else {
         QPixmap screenshot = canvas->GetScreenshot();
         if (screenshot.isNull()) {

@@ -4,6 +4,7 @@
 TEMPLATE = app
 QT += opengl svg
 
+
 TARGET = mldemos
 NAME = mldemos
 MLPATH =..
@@ -39,7 +40,6 @@ FORMS += aboutDialog.ui \
 	statisticsDialog.ui \
 	viewOptions.ui \
     compare.ui \
-    expose.ui \
     manualSelection.ui \
     inputDimensions.ui \
     datagenerator.ui \
@@ -75,7 +75,9 @@ HEADERS += basicMath.h \
     gridsearch.h \
     visualization.h \
     dataseteditor.h \
-    algorithmmanager.h
+    algorithmmanager.h \
+    pluginmanager.h \
+    basewidget.h
 
 SOURCES += \
 	main.cpp \
@@ -87,7 +89,9 @@ SOURCES += \
     gridsearch.cpp \
     visualization.cpp \
     dataseteditor.cpp \
-    algorithmmanager.cpp
+    algorithmmanager.cpp \
+    pluginmanager.cpp \
+    basewidget.cpp
 
 OTHER_FILES += \
     shaders/drawSamples.fsh \

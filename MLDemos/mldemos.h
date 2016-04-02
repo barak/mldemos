@@ -19,7 +19,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free
 Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 *********************************************************************/
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
+#include <QtWidgets>
 #include <QTime>
 #include <QResizeEvent>
 #include <QMutex>
@@ -55,6 +56,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "glwidget.h"
 #include "visualization.h"
 #include "algorithmmanager.h"
+#include "pluginmanager.h"
 
 class MLDemos : public QMainWindow
 {
@@ -71,23 +73,23 @@ public:
     fvec selectionStart;
     QMutex mutex;
 
-private:
-
+    Ui::MLDemosClass ui;
+    Ui::statisticsDialog *showStats;
+    Ui::ManualSelection* manualSelection;
+    Ui::InputDimensions* inputDimensions;
     QDialog *displayDialog, *aboutDialog, *statsDialog, *manualSelectDialog, *inputDimensionsDialog;
+
+private:
 
     QNamedWindow *rocWidget;
 
-	Ui::MLDemosClass ui;
 	Ui::viewOptionDialog *displayOptions;
 	Ui::aboutDialog *aboutPanel;
-	Ui::statisticsDialog *showStats;
 	Ui::DrawingToolbar *drawToolbar;
     Ui::DrawingToolbarContext1 *drawToolbarContext1;
 	Ui::DrawingToolbarContext2 *drawToolbarContext2;
 	Ui::DrawingToolbarContext3 *drawToolbarContext3;
 	Ui::DrawingToolbarContext4 *drawToolbarContext4;
-    Ui::ManualSelection* manualSelection;
-    Ui::InputDimensions* inputDimensions;
     QWidget *drawToolbarWidget;
 	QWidget *drawContext1Widget, *drawContext2Widget, *drawContext3Widget, *drawContext4Widget;
 	QToolBar *toolBar;
@@ -99,6 +101,7 @@ private:
     GLWidget *glw;
     Visualization *vis;
     AlgorithmManager *algo;
+    PluginManager *plugin;
     DataImporter *import;
     DataGenerator *generator;
     DatasetEditor *dataEdit;
@@ -128,7 +131,7 @@ private:
 	bool bIsRocNew;
 	bool bIsCrossNew;
 public:
-	MLDemos(QString filename="", QWidget *parent = 0, Qt::WFlags flags = 0);
+    MLDemos(QString filename="", QWidget *parent = 0, Qt::WindowFlags flags = 0);
 	~MLDemos();
 
 	void resizeEvent( QResizeEvent *event );
@@ -150,6 +153,9 @@ public slots:
 
 	void ShowAbout();
 	void ShowAlgorithmOptions();
+
+    void RestAlgorithmOptionsButton();
+
 	void ShowOptionCompare();
 	void ShowSampleDrawing();
 	void ShowOptionDisplay();
@@ -157,6 +163,7 @@ public slots:
 	void ShowToolbar();
     void ShowAddData();
     void ShowGridSearch();
+    void ResetGridSearchButton();
     void HideSampleDrawing();
     void HideOptionDisplay();
     void HideOptionCompare();

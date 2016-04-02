@@ -1,0 +1,26 @@
+mldemos (0.5.1-3) unstable; urgency=low
+
+  * Address some format string errors.
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 13 Aug 2013 11:04:56 +0200
+
+mldemos (0.5.1-2) unstable; urgency=low
+
+  * Work around qreal being float on an ARM (closes: #718751)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 12 Aug 2013 18:38:33 +0200
+
+mldemos (0.5.1-1) unstable; urgency=low
+
+  * New upstream release
+  * Bump debian standard version (no changes required)
+  * Update plugin directory quilt patch due to code motion
+  * Build dependencies: libopencv-dev, libqt4-opengl-dev, libboost-dev
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 04 Mar 2013 11:55:41 +0000
+
+mldemos (0.4.3-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 05 Jun 2012 13:50:58 +0100

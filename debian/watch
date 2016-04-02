@@ -1,0 +1,4 @@
+version=3
+
+opts=downloadurlmangle=s/trees/archive-tarball/,filenamemangle=s/.*\/(.*)/mldemos-$1.tar.gz/ \
+  http://gitorious.org/mldemos/mldemos/trees/v(\d+\.\d+\.\d+)

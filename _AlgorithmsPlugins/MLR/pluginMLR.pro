@@ -13,7 +13,7 @@ LIBS += -L$$MLPATH/_3rdParty -l3rdParty
 # Source Files            #
 ###########################
 FORMS += \
-     paramsRRMLR.ui
+     paramsRRMLR.ui \
      paramsESMLR.ui 
 
 HEADERS += \

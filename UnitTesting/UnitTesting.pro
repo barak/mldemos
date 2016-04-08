@@ -6,7 +6,7 @@ QT += testlib
 TARGET = UnitTesting
 NAME = UnitTesting
 MLPATH = ..
-DESTDIR = $$MLPATH
+DESTDIR = $$MLPATH/UnitTesting
 
 CONFIG += mainApp
 include($$MLPATH/MLDemos_variables.pri)

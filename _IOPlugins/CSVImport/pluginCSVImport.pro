@@ -1,10 +1,10 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = IO_CSVImport
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
 

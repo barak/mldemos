@@ -1,22 +1,26 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = mld_LLE
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
+
 ###########################
 # Source Files            #
 ###########################
 FORMS += \
     paramsLLE.ui
-SOURCES += pluginProjections.cpp \
+
+SOURCES +=
+    pluginProjections.cpp \
     interfaceLLEProjection.cpp \
     projectorLLE.cpp
 
-HEADERS += projectorLLE.h \
+HEADERS += \
+    projectorLLE.h \
     interfaceLLEProjection.h
 
 OTHER_FILES += \

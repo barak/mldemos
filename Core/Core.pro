@@ -4,46 +4,48 @@
 TEMPLATE = lib
 QT += svg opengl
 NAME = Core
-MLPATH =..
+MLPATH = ..
 win32:CONFIG += coreLib
 else:CONFIG += coreLib static
 
 include($$MLPATH/MLDemos_variables.pri)
 
 win32{
-	DESTDIR = ..
+    DESTDIR = ..
 }
 ###########################
 # Files                   #
 ###########################
-FORMS += expose.ui \
+FORMS += \
+    expose.ui \
     dataImport.ui
+
 HEADERS += \
-	basicMath.h \
-	canvas.h \
-	datasetManager.h \
-	optimization_test_functions.h \
-	gettimeofday.h \
-	drawUtils.h \
-	drawSVG.h \
-	drawTimer.h \
+    basicMath.h \
+    canvas.h \
+    datasetManager.h \
+    optimization_test_functions.h \
+    gettimeofday.h \
+    drawUtils.h \
+    drawSVG.h \
+    drawTimer.h \
     mymaths.h \
     expose.h \
     public.h \
     parser.h \
-	roc.h \
-	types.h \
-	widget.h \
-	interfaces.h \
-	classifier.h \
-	obstacles.h \
-	regressor.h \
+    roc.h \
+    types.h \
+    widget.h \
+    interfaces.h \
+    classifier.h \
+    obstacles.h \
+    regressor.h \
     maximize.h \
     reinforcement.h \
     dynamical.h \
-	clusterer.h \
-	fileUtils.h \
-	spline.h \
+    clusterer.h \
+    fileUtils.h \
+    spline.h \
     projector.h \
     dataImporter.h \
     contours.h \
@@ -55,15 +57,15 @@ HEADERS += \
     glUtils.h
 
 SOURCES += \
-	canvas.cpp \
-	datasetManager.cpp \
-	drawUtils.cpp \
-	drawSVG.cpp \
-	drawTimer.cpp \
-	mymaths.cpp \
+    canvas.cpp \
+    datasetManager.cpp \
+    drawUtils.cpp \
+    drawSVG.cpp \
+    drawTimer.cpp \
+    mymaths.cpp \
     expose.cpp \
     roc.cpp \
-	fileUtils.cpp \
+    fileUtils.cpp \
     parser.cpp \
     widget.cpp \
     dataImporter.cpp \

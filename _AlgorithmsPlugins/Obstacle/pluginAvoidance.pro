@@ -1,25 +1,21 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = mld_DSAvoid
-MLPATH =../..
+MLPATH = ../..
 
 include("$$MLPATH/MLDemos_variables.pri")
+
 ###########################
 # Source Files            #
 ###########################
-HEADERS +=	\
-    canvas.h \
-    datasetManager.h \
-    mymaths.h \
-    interfaces.h \
-    obstacles.h \
+HEADERS += \
     DSAvoid.h \
     interfaceAvoidance.h
 
-SOURCES += 	\
+SOURCES += \
     DSAvoid.cpp \
     interfaceAvoidance.cpp
 

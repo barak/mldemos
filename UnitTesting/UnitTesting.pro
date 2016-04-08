@@ -1,20 +1,19 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 QT += testlib
 
 TARGET = UnitTesting
 NAME = UnitTesting
-MLPATH =..
+MLPATH = ..
 DESTDIR = $$MLPATH
 
 CONFIG += mainApp
 include($$MLPATH/MLDemos_variables.pri)
 
-
-# ##########################
-# Source Files       #
-# ##########################
+###########################
+# Source Files            #
+###########################
 HEADERS += \  
     testDatasetManager.h
 SOURCES += \  

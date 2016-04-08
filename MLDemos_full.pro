@@ -22,9 +22,9 @@ UnitTesting.depends = Core MLDemos
 
 # algorithm plugins
 ALGOPATH = _AlgorithmsPlugins
-#SUBDIRS += GMM
-SUBDIRS += Obstacle GMM Kernel GP KNN Projections LWPR Maximizers Reinforcements OpenCV SEDS FLAME DBSCAN Lowess CCA ASVM GHSOM RandomKernel MetricLearning
-#SUBDIRS += Example
+SUBDIRS += Obstacle GMM Kernel GP KNN LWPR Maximizers Reinforcements SEDS FLAME DBSCAN Lowess CCA ASVM GHSOM RandomKernel MetricLearning
+SUBDIRS += OpenCV MLR QTMeans Projections
+SUBDIRS += Example
 
 GMM.file = $$ALGOPATH/GMM/pluginGMM.pro
 ASVM.file = $$ALGOPATH/ASVM/pluginASVM.pro
@@ -37,7 +37,6 @@ Obstacle.file = $$ALGOPATH/Obstacle/pluginAvoidance.pro
 SEDS.file = $$ALGOPATH/SEDS/pluginSEDS.pro
 Maximizers.file = $$ALGOPATH/Maximizers/pluginMaximizers.pro
 Reinforcements.file = $$ALGOPATH/Reinforcements/pluginReinforcements.pro
-OpenCV.file = $$ALGOPATH/OpenCV/pluginOpenCV.pro
 Lowess.file = $$ALGOPATH/Lowess/pluginLowess.pro
 FLAME.file = $$ALGOPATH/FLAME/pluginFlame.pro
 DBSCAN.file = $$ALGOPATH/DBSCAN/pluginDBSCAN.pro
@@ -46,7 +45,8 @@ CCA.file = $$ALGOPATH/CCA/pluginCCA.pro
 GHSOM.file = $$ALGOPATH/GHSOM/pluginGHSOM.pro
 RandomKernel.file = $$ALGOPATH/RandomKernel/pluginRandomKernel.pro
 MetricLearning.file = $$ALGOPATH/MetricLearning/pluginMetricLearning.pro
-# still too experimental
+# experimental or buggy
+OpenCV.file = $$ALGOPATH/OpenCV/pluginOpenCV.pro
 MLR.file = $$ALGOPATH/MLR/pluginMLR.pro
 QTMeans.file = $$ALGOPATH/QTMeans/pluginQTMeans.pro
 # example template

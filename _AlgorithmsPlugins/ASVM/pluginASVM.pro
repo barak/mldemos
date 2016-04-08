@@ -1,32 +1,30 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = mld_ASVM
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
+
 ###########################
 # Source Files            #
 ###########################
 FORMS += \
     paramsASVM.ui
-HEADERS +=	\
+
+HEADERS += \
     ASVMLearning.h \
     asvm.h \
     asvmdata.h \
     asvm_smo_solver.h \
     svm.h \
     util.h \
-    canvas.h \
-    datasetManager.h \
-    mymaths.h \
-    drawUtils.h \
     interfaceASVMDynamic.h \
     dynamicalASVM.h
 
-SOURCES += 	\
+SOURCES += \
     asvm.cpp \
     asvm_smo_solver.cpp \
     asvmdata.cpp \

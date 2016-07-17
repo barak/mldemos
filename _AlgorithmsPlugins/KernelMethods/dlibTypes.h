@@ -27,7 +27,7 @@ Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #define linfunc dlib::decision_function< linkernel >
 #define polfunc dlib::decision_function< polkernel >
 
-typedef dlib::matrix<double, 2, 1> sample_type;
+typedef dlib::matrix<double, 0, 1> sample_type;
 typedef dlib::radial_basis_kernel<sample_type> rbf_kernel;
 typedef dlib::polynomial_kernel<sample_type> pol_kernel;
 typedef dlib::linear_kernel<sample_type> lin_kernel;
@@ -35,7 +35,7 @@ typedef dlib::decision_function<lin_kernel> lin_func;
 typedef dlib::decision_function<pol_kernel> pol_func;
 typedef dlib::decision_function<rbf_kernel> rbf_func;
 
-typedef dlib::matrix<double, 1, 1> reg_sample_type;
+typedef dlib::matrix<double, 0, 1> reg_sample_type;
 typedef dlib::radial_basis_kernel<reg_sample_type> reg_rbf_kernel;
 typedef dlib::polynomial_kernel<reg_sample_type> reg_pol_kernel;
 typedef dlib::linear_kernel<reg_sample_type> reg_lin_kernel;

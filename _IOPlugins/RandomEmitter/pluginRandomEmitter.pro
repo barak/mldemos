@@ -1,16 +1,16 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = IO_RandomEmitter
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
 
 ###########################
 # Source Files            #
 ###########################
-HEADERS +=	interfaceRandomEmitter.h
+HEADERS += interfaceRandomEmitter.h
 
-SOURCES += 	interfaceRandomEmitter.cpp
+SOURCES += interfaceRandomEmitter.cpp

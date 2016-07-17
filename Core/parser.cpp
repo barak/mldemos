@@ -364,6 +364,12 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
         sample.resize((outputLabelColumn==-1) ? dim : dim-1);
         FOR(j, dim)
         {
+            if(data[i].size() < dim) {
+                qDebug() << "Something is wrong with the data, exiting!";
+                vector<fvec> newSamples;
+                ivec newLabels;
+                return pair<vector<fvec>,ivec>(newSamples,newLabels);
+            }
             QString s(data[i][j].c_str());
             bool ok;
             float val = s.toFloat(&ok);
@@ -451,13 +457,6 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     }
     else
     {
-        /*
-        qDebug() << "label indices";
-        for(map<string,int>::iterator it = labelMaps[outputLabelColumn].begin(); it != labelMaps[outputLabelColumn].end(); it++)
-        {
-            qDebug() << (it->first).c_str() << " " << it->second;
-        }
-        */
         bool numerical = true;
         FOR(i, data.size())
         {
@@ -490,7 +489,7 @@ pair<vector<fvec>,ivec> CSVParser::getData(ivec excludeIndex, int maxSamples)
     {
         vector<fvec> newSamples(maxSamples);
         ivec newLabels(maxSamples);
-        u32 *perm = randPerm(maxSamples);
+        u32 *perm = randPerm(samples.size());
         FOR(i, maxSamples)
         {
             newSamples[i] = samples[perm[i]];

@@ -1,0 +1,24 @@
+language: cpp
+
+os: linux
+dist: trusty
+sudo: required
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - libopencv-dev
+      - qtbase5-dev
+      - libqt5svg5-dev
+      - libqt5opengl5-dev
+      - libboost-dev
+
+before_script:
+  - mkdir build
+  - cd build
+  - qmake -qt=5 ../MLDemos_full.pro
+
+script: make

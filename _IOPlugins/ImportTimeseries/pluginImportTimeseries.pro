@@ -1,11 +1,11 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 QT += webkit
 NAME = IO_ImportTimeseries
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
 
@@ -17,10 +17,9 @@ FORMS += \
     importTimeseries.ui
 
 HEADERS += \
-	parser.h \
-	fileUtils.h \
-	importTimeseries.h
+    parser.h \
+    importTimeseries.h
 
 SOURCES += \
-	parser.cpp \
+    parser.cpp \
     importTimeseries.cpp

@@ -1,10 +1,10 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 NAME = mld_GHSOM
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
 
@@ -14,10 +14,6 @@ include($$MLPATH/MLDemos_variables.pri)
 FORMS += \
     paramsGHSOM.ui
 HEADERS +=	\
-    glwidget.h \
-    canvas.h \
-    datasetManager.h \
-    mymaths.h \
     interfaceGHSOM.h \
     projectorGHSOM.h
 
@@ -43,4 +39,7 @@ SOURCES += \
     GHSOM/neuron.cpp \
     GHSOM/neuronlayer.cpp \
     GHSOM/vector.cpp
+
+OTHER_FILES += \
+    plugin.json
 

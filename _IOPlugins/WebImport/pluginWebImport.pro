@@ -1,11 +1,11 @@
-# ##########################
-# Configuration      #
-# ##########################
+###########################
+# Configuration           #
+###########################
 TEMPLATE = lib
 CONFIG += plugin
 QT += webkit network
 NAME = IO_WebImport
-MLPATH =../..
+MLPATH = ../..
 
 include($$MLPATH/MLDemos_variables.pri)
 
@@ -56,18 +56,21 @@ LIBS += -lopencv_core230 \
 ###########################
 # Source Files            #
 ###########################
-FORMS += WebImport.ui
+FORMS += \
+    WebImport.ui
 
-HEADERS +=	WebImport.h \
-            basicOpenCV.h \
-            parser.h \
-            widget.h \
+HEADERS += \
+    WebImport.h \
+    basicOpenCV.h \
+    parser.h \
+    widget.h \
     pcaprojection.h
 
-SOURCES += 	WebImport.cpp \
-            basicOpenCV.cpp \
-            parser.cpp \
-            widget.cpp \
+SOURCES += \
+    WebImport.cpp \
+    basicOpenCV.cpp \
+    parser.cpp \
+    widget.cpp \
     pcaprojection.cpp
 
 

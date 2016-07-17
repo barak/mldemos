@@ -3,8 +3,8 @@
 ###########################
 TEMPLATE = lib
 NAME = 3rdParty
-MLPATH =..
-CONFIG += mainApp static
+MLPATH = ..
+CONFIG += mainApp static _3rdParty
 
 include($$MLPATH/MLDemos_variables.pri)
 
@@ -29,12 +29,13 @@ win32-g++|macx|unix{
 }
 
 win32{
-	DESTDIR = ../_3rdParty
+    DESTDIR = ../_3rdParty
 }
+
 ###########################
 # Files                   #
 ###########################
-HEADERS +=	\
+HEADERS += \
 	fgmm/em.h \
 	fgmm/fgmm++.hpp \
 	fgmm/fgmm.h \
@@ -167,22 +168,30 @@ SOURCES +=  \
 	lwpr/lwpr_mem.c \
 	lwpr/lwpr_xml.c
 
-HEADERS += 	JnS/Matutil.h \
-			JnS/JnS.h
-SOURCES += 	JnS/Matutil.cpp \
-			JnS/JnS.cpp
-HEADERS += 	liblinear/linear.h \
-			liblinear/tron.h \
-			liblinear/blasp.h \
-			liblinear/blas.h
-SOURCES += 	liblinear/linear.cpp \
-			liblinear/tron.cpp \
-			liblinear/daxpy.c \
-			liblinear/ddot.c \
-			liblinear/dnrm2.c \
-			liblinear/dscal.c
+HEADERS += \
+        JnS/Matutil.h \
+        JnS/JnS.h
 
-HEADERS += ANN/ANN.h \
+SOURCES += \
+        JnS/Matutil.cpp \
+        JnS/JnS.cpp
+
+HEADERS += \
+        liblinear/linear.h \
+        liblinear/tron.h \
+        liblinear/blasp.h \
+        liblinear/blas.h
+
+SOURCES += \
+        liblinear/linear.cpp \
+        liblinear/tron.cpp \
+        liblinear/daxpy.c \
+        liblinear/ddot.c \
+        liblinear/dnrm2.c \
+        liblinear/dscal.c
+
+HEADERS += \
+        ANN/ANN.h \
 	ANN/ANNperf.h \
 	ANN/ANNx.h \
 	ANN/bd_tree.h \
@@ -195,7 +204,8 @@ HEADERS += ANN/ANN.h \
 	ANN/pr_queue.h \
 	ANN/pr_queue_k.h
 
-SOURCES += ANN/ANN.cpp \
+SOURCES += \
+        ANN/ANN.cpp \
 	ANN/bd_fix_rad_search.cpp \
 	ANN/bd_pr_search.cpp \
 	ANN/bd_search.cpp \
@@ -210,7 +220,7 @@ SOURCES += ANN/ANN.cpp \
 	ANN/kd_util.cpp \
 	ANN/perf.cpp
 
-HEADERS +=	\
+HEADERS += \
 	dlib/algs.h \
 	dlib/array.h \
 	dlib/array2d.h \
@@ -310,8 +320,7 @@ HEADERS +=	\
 	dlib/windows_magic.h \
 	dlib/xml_parser.h \
 
-HEADERS +=	\
-	nlopt.hpp \
+HEADERS += \
 	nlopt/tools.h \
 	nlopt/stogo_config.h \
 	nlopt/stogo.h \
@@ -345,7 +354,7 @@ HEADERS +=	\
 	nlopt/auglag.h \
 	nlopt/config.h
 
-SOURCES += 	\
+SOURCES += \
 	nlopt/tools.cc \
 	nlopt/timer.c \
 	nlopt/stop.c \
@@ -418,7 +427,7 @@ SOURCES += \
 	LAMP_HMM/vectorObsProb.cpp
 
 HEADERS += \
-        gsl/config.h \
+    gsl/config.h \
     gsl/ieee-utils/gsl_ieee_utils.h \
     gsl/linalg/tridiag.h
 

@@ -5,19 +5,33 @@ Subject: hardwire plugin directory
 Set directory to scan for plugins subdirectory containing plugins to
 system directory in which the plugins subdirectory is installed.
 ---
- MLDemos/algorithmmanager.cpp | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ MLDemos/pluginmanager.cpp | 2 +-
+ MLScripting/main.cpp      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MLDemos/algorithmmanager.cpp b/MLDemos/algorithmmanager.cpp
-index c0d20e1..f7a9314 100644
---- a/MLDemos/algorithmmanager.cpp
-+++ b/MLDemos/algorithmmanager.cpp
-@@ -245,7 +245,7 @@ AlgorithmManager::~AlgorithmManager()
- void AlgorithmManager::LoadPlugins()
+diff --git a/MLDemos/pluginmanager.cpp b/MLDemos/pluginmanager.cpp
+index 778d6a8..d955eca 100644
+--- a/MLDemos/pluginmanager.cpp
++++ b/MLDemos/pluginmanager.cpp
+@@ -21,7 +21,7 @@ PluginManager::~PluginManager()
+ void PluginManager::LoadPlugins()
  {
      qDebug() << "Importing plugins";
 -    QDir pluginsDir = QDir(qApp->applicationDirPath());
 +    QDir pluginsDir = QDir("/usr/lib/mldemos");
-     QStringList pluginFileNames;
      QDir alternativeDir = pluginsDir;
  
+ #if defined(Q_OS_WIN)
+diff --git a/MLScripting/main.cpp b/MLScripting/main.cpp
+index 3e2523d..3f2863f 100644
+--- a/MLScripting/main.cpp
++++ b/MLScripting/main.cpp
+@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
+ void LoadPlugins()
+ {
+     //qDebug() << "Importing plugins";
+-    QDir pluginsDir = QDir(qApp->applicationDirPath());
++    QDir pluginsDir = QDir("/usr/lib/mldemos");
+     QDir alternativeDir = pluginsDir;
+ 
+ #if defined(Q_OS_WIN)

@@ -1,0 +1,38 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Tue, 19 Jul 2016 09:14:53 +0200
+Subject: constexpr
+
+GCC 5+ do not allow floating point literals in constant expressions, as in the error messages below.  This patch addresses the issue in the approved (and, might I say from a personal perspective as a language designer, gut-wrenchingly miserable) way.  See https://bugs.debian.org/812032
+
+glwidget.h:117:39: error: 'constexpr' needed for in-class initialization of static data member 'const float GLWidget::texHalfWidth' of non-integral type [-fpermissive]
+     static const float texHalfWidth = 64.0f;
+                                       ^~~~~
+
+glwidget.h:118:40: error: 'constexpr' needed for in-class initialization of static data member 'const float GLWidget::texHalfHeight' of non-integral type [-fpermissive]
+     static const float texHalfHeight = 64.0f;
+                                        ^~~~~
+
+glwidget.h:119:45: error: 'constexpr' needed for in-class initialization of static data member 'const float GLWidget::texRadius' of non-integral type [-fpermissive]
+     static const float texRadius = texWidth*0.9;
+                                             ^~~
+---
+ Core/glwidget.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Core/glwidget.h b/Core/glwidget.h
+index c04690e..166e150 100644
+--- a/Core/glwidget.h
++++ b/Core/glwidget.h
+@@ -115,9 +115,9 @@ public:
+ 
+     static const GLint texWidth = 128;
+     static const GLint texHeight = 128;
+-    static const float texHalfWidth = 64.0f;
+-    static const float texHalfHeight = 64.0f;
+-    static const float texRadius = texWidth*0.9;
++    static constexpr float texHalfWidth = 64.0f;
++    static constexpr float texHalfHeight = 64.0f;
++    static constexpr float texRadius = texWidth*0.9;
+     static const int textureCount = 2; // 0: samples, 1: wide circle
+     static GLuint *textureNames;
+     static unsigned char **textureData;

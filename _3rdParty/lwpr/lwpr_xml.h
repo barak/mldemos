@@ -177,7 +177,7 @@ void lwpr_xml_error(LWPR_ParserData *ud, const char *msg);
 
 /** \brief Auxiliary routine to report a "bad dimensionality" parsing error 
    \param[in] ud  Pointer to parser data structure (including LWPR model etc.)
-   \param[in] fieldname    Name of variable where error occured
+   \param[in] fieldname    Name of variable where error occurred
    \param[in] wishM        Number of desired rows, or 1 in case of scalars / vectors
    \param[in] wishN        Number of desired columns, or elements in case of vectors
 */

@@ -707,7 +707,7 @@ void NeuronLayer::saveAsSOMLib(){
     //struct tm *now = (struct tm*)malloc(sizeof(struct tm));
     time_t now = time(NULL);
     mapFile.precision(10);
-    mapFile << "#SOM Map Decription File\n#created by ghsom " << VERSION << " (Growing Hierarchical Self-Organizing Map)\n#Michael Dittenbach\n#\n";
+    mapFile << "#SOM Map Description File\n#created by ghsom " << VERSION << " (Growing Hierarchical Self-Organizing Map)\n#Michael Dittenbach\n#\n";
     mapFile << "$TYPE rect\n";
     mapFile << "$XDIM " << x << "\n";
     mapFile << "$YDIM " << y << "\n";

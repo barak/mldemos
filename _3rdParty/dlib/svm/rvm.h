@@ -247,7 +247,7 @@ namespace dlib
                     - alpha(active_bases(i)) == the alpha value associated with sample x(i)
                     - weights(active_bases(i)) == the weight value associated with sample x(i)
                     - colm(phi, active_bases(i)) == the column of phi associated with sample x(i)
-                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_colum()) 
+                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_column()) 
                 - else
                     - the i'th sample isn't in the model and notionally has an alpha of infinity and
                       a weight of 0.
@@ -262,7 +262,7 @@ namespace dlib
             // set the initial values of these guys
             set_all_elements(active_bases, -1);
             long first_basis = pick_initial_vector(x,t);
-            get_kernel_colum(first_basis, x, K_col);
+            get_kernel_column(first_basis, x, K_col);
             active_bases(first_basis) = 0;
             set_colm(phi,0) = K_col;
             alpha(0) = compute_initial_alpha(phi, t);
@@ -384,7 +384,7 @@ namespace dlib
                     if (active_bases(i) != -1)
                         K_col = colm(phi,active_bases(i));
                     else
-                        get_kernel_colum(i, x, K_col);
+                        get_kernel_column(i, x, K_col);
 
                     // tempv2 = trans(phi_m)*B
                     tempv2 = scale_columns(trans(K_col), beta);  
@@ -476,7 +476,7 @@ namespace dlib
                         // update phi by adding the new sample's kernel matrix column in as one of phi's columns
                         tempm.set_size(phi.nr(), phi.nc()+1);
                         set_subm(tempm, get_rect(phi)) = phi;
-                        get_kernel_colum(selected_idx, x, K_col);
+                        get_kernel_column(selected_idx, x, K_col);
                         set_colm(tempm, phi.nc()) = K_col;
                         tempm.swap(phi);
 
@@ -523,7 +523,7 @@ namespace dlib
             // find the row in the kernel matrix that has the biggest normalized projection onto the t vector
             for (long r = 0; r < x.nr(); ++r)
             {
-                get_kernel_colum(r,x,K_col);
+                get_kernel_column(r,x,K_col);
                 double temp = trans(K_col)*t;
                 temp = temp*temp/length_squared(K_col);
 
@@ -540,7 +540,7 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 
         template <typename T>
-        void get_kernel_colum (
+        void get_kernel_column (
             long idx,
             const T& x,
             scalar_vector_type& col
@@ -708,7 +708,7 @@ namespace dlib
                     - alpha(active_bases(i)) == the alpha value associated with sample x(i)
                     - weights(active_bases(i)) == the weight value associated with sample x(i)
                     - colm(phi, active_bases(i)) == the column of phi associated with sample x(i)
-                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_colum()) 
+                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_column()) 
                 - else
                     - the i'th sample isn't in the model and notionally has an alpha of infinity and
                       a weight of 0.
@@ -724,7 +724,7 @@ namespace dlib
             // set the initial values of these guys
             set_all_elements(active_bases, -1);
             long first_basis = pick_initial_vector(x,t);
-            get_kernel_colum(first_basis, x, K_col);
+            get_kernel_column(first_basis, x, K_col);
             active_bases(first_basis) = 0;
             set_colm(phi,0) = K_col;
             alpha(0) = compute_initial_alpha(phi, t, var);
@@ -793,7 +793,7 @@ namespace dlib
                     if (active_bases(i) != -1)
                         K_col = colm(phi,active_bases(i));
                     else
-                        get_kernel_colum(i, x, K_col);
+                        get_kernel_column(i, x, K_col);
 
                     // tempv2 = trans(phi_m)*B
                     tempv2 = trans(K_col)/var;  
@@ -882,7 +882,7 @@ namespace dlib
                         // update phi by adding the new sample's kernel matrix column in as one of phi's columns
                         tempm.set_size(phi.nr(), phi.nc()+1);
                         set_subm(tempm, get_rect(phi)) = phi;
-                        get_kernel_colum(selected_idx, x, K_col);
+                        get_kernel_column(selected_idx, x, K_col);
                         set_colm(tempm, phi.nc()) = K_col;
                         tempm.swap(phi);
 
@@ -916,7 +916,7 @@ namespace dlib
     // ------------------------------------------------------------------------------------
 
         template <typename T>
-        void get_kernel_colum (
+        void get_kernel_column (
             long idx,
             const T& x,
             scalar_vector_type& col
@@ -958,7 +958,7 @@ namespace dlib
             // find the row in the kernel matrix that has the biggest normalized projection onto the t vector
             for (long r = 0; r < x.nr(); ++r)
             {
-                get_kernel_colum(r,x,K_col);
+                get_kernel_column(r,x,K_col);
                 double temp = trans(K_col)*t;
                 temp = temp*temp/length_squared(K_col);
 

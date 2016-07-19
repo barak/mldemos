@@ -129,7 +129,7 @@ extern "C" {
    \param[in] model    Pointer to a valid LWPR model structure
    \param[in] filename The name of the file
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
    \ingroup LWPR_C    
 */
@@ -140,7 +140,7 @@ int lwpr_write_binary(const LWPR_Model *model, const char *filename);
    \param[in,out] model Pointer to a valid LWPR model structure
    \param[in] filename  Name of the file to read the model from
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
    \ingroup LWPR_C    
 */
@@ -151,7 +151,7 @@ int lwpr_read_binary(LWPR_Model *model, const char *filename);
    \param[in] model    Pointer to a valid LWPR model structure
    \param[in] fp       Descriptor of an already opened file (see stdio.h)
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
    \ingroup LWPR_C    
 */
@@ -161,7 +161,7 @@ int lwpr_write_binary_fp(const LWPR_Model *model, FILE *fp);
    \param[in,out] model Pointer to a valid LWPR model structure
    \param[in] fp        Descriptor of an already opened file (see stdio.h)
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
    \ingroup LWPR_C    
 */
@@ -175,7 +175,7 @@ int lwpr_read_binary_fp(LWPR_Model *model, FILE *fp);
    \param[in] N        Number of columns
    \param[in] data     Pointer to matrix elements
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_write_matrix(FILE *fp,int M, int Ms, int N, const double *data);
@@ -187,7 +187,7 @@ int lwpr_io_write_matrix(FILE *fp,int M, int Ms, int N, const double *data);
    \param[in] N        Number of columns
    \param[out] data    Pointer to matrix elements
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_read_matrix(FILE *fp, int M, int Ms, int N, double *data);
@@ -197,7 +197,7 @@ int lwpr_io_read_matrix(FILE *fp, int M, int Ms, int N, double *data);
    \param[in] N        Number of elements
    \param[in] data     Pointer to vector elements
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_write_vector(FILE *fp, int N, const double *data);
@@ -207,7 +207,7 @@ int lwpr_io_write_vector(FILE *fp, int N, const double *data);
    \param[in] N        Number of elements
    \param[out] data     Pointer to vector elements
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_read_vector(FILE *fp, int N, double *data);
@@ -216,7 +216,7 @@ int lwpr_io_read_vector(FILE *fp, int N, double *data);
    \param[in] fp       File descriptor
    \param[in] data     Scalar value
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_write_scalar(FILE *fp, double data);
@@ -225,7 +225,7 @@ int lwpr_io_write_scalar(FILE *fp, double data);
    \param[in] fp       File descriptor
    \param[out] data    Pointer to scalar value
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_read_scalar(FILE *fp, double *data);
@@ -234,7 +234,7 @@ int lwpr_io_read_scalar(FILE *fp, double *data);
    \param[in] fp       File descriptor
    \param[in] data     Integer value
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_write_int(FILE *fp, int data);
@@ -243,7 +243,7 @@ int lwpr_io_write_int(FILE *fp, int data);
    \param[in] fp      File descriptor
    \param[out] data    Pointer to integer
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_read_int(FILE *fp, int *data);
@@ -252,7 +252,7 @@ int lwpr_io_read_int(FILE *fp, int *data);
    \param[in] fp     File descriptor
    \param[in] RF     Pointer to a receptive field structure
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_write_rf(FILE *fp, const LWPR_ReceptiveField *RF);
@@ -262,7 +262,7 @@ int lwpr_io_write_rf(FILE *fp, const LWPR_ReceptiveField *RF);
    \param[in,out] sub Pointer to the current LWPR_SubModel, to which a new LWPR_ReceptiveField structure
                       will be added.
    \return
-      - 0 if errors have occured
+      - 0 if errors have occurred
       - 1 on success
 */
 int lwpr_io_read_rf(FILE *fp, LWPR_SubModel *sub);

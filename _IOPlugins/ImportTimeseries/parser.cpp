@@ -181,7 +181,7 @@ void CSVParser::cleanData(unsigned int acceptedTypes)
     for(size_t i = 0; i < inputTypes.size() - 1; i++)
         if (!(inputTypes[i]&acceptedTypes)) // data type does not correspond to a requested one
         {
-            std::cout << "Removing colum " << i << " of type " << inputTypes[i] <<  " ... ";
+            std::cout << "Removing column " << i << " of type " << inputTypes[i] <<  " ... ";
             for(size_t j = 0; j < data.size(); j++)
             {
                 it = data.at(j).begin() + i;

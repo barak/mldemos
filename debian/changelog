@@ -1,3 +1,15 @@
+mldemos (0.5.1-4) unstable; urgency=medium
+
+  * merge updates from
+    - github.com/machined-learning/MLDemos
+    - github.com/billyonthemountain/mldemos
+  * switch to qt5 per said updates
+  * forward port plugin directory patch per said updates
+  * quilt patch for floating point literal constants (closes: #812032)
+  * remove gitorious debian/watch file
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Tue, 19 Jul 2016 11:24:11 +0200
+
 mldemos (0.5.1-3) unstable; urgency=low
 
   * Address some format string errors.

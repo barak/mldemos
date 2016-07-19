@@ -9,6 +9,8 @@ website
 */ValgrindOut.xml
 pluginsDebug/*
 plugins/*
+/mldemos
+/UnitTesting/UnitTesting
 
 # osx noise
 .DS_Store
@@ -21,6 +23,7 @@ Makefile*
 *.pro.user*
 *.app
 *.dylib
+.qmake.cache
 
 # codeblocks noise
 *.layout

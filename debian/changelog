@@ -1,4 +1,4 @@
-mldemos (0.5.1-4) unstable; urgency=medium
+mldemos (0.5.1+git.1.ee5d11f-1) unstable; urgency=medium
 
   * merge updates from
     - github.com/machined-learning/MLDemos
@@ -7,8 +7,9 @@ mldemos (0.5.1-4) unstable; urgency=medium
   * forward port plugin directory patch per said updates
   * quilt patch for floating point literal constants (closes: #812032)
   * remove gitorious debian/watch file
+  * masticate tree bark and git goo into new upstream version
 
- -- Barak A. Pearlmutter <bap@debian.org>  Tue, 19 Jul 2016 11:24:11 +0200
+ -- Barak A. Pearlmutter <bap@debian.org>  Wed, 28 Dec 2016 17:05:40 +0000
 
 mldemos (0.5.1-3) unstable; urgency=low
 

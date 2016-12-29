@@ -1,5 +1,6 @@
 /*.debhelper
 /*.log
 /*.substvars
+/debhelper-build-stamp
 /files
 /mldemos/

@@ -8,8 +8,8 @@ Build-Depends: debhelper (>= 10),
 	       qtbase5-dev, qttools5-dev, libqt5opengl5-dev, libqt5svg5-dev
 Standards-Version: 3.9.8
 Homepage: http://mldemos.epfl.ch
-Vcs-Git: git://anonscm.debian.org/collab-maint/mldemos.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/mldemos.git
+Vcs-Git: https://anonscm.debian.org/collab-maint/mldemos.git
+Vcs-Browser: https://anonscm.debian.org/gitweb/?p=collab-maint/mldemos.git
 
 Package: mldemos
 Architecture: any

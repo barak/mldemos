@@ -1,0 +1,38 @@
+From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
+Date: Wed, 28 Dec 2016 23:36:35 +0000
+Subject: null tests
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+use !p instead of p==NULL
+
+LAMP_HMM/hmmFind.cpp:120:19: error: no match for ‘operator==’ (operand types are ‘std::ifstream {aka std::basic_ifstream<char>}’ and ‘long int’)
+         if(hmmFile==NULL){
+                   ^
+---
+ _3rdParty/LAMP_HMM/hmmFind.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/_3rdParty/LAMP_HMM/hmmFind.cpp b/_3rdParty/LAMP_HMM/hmmFind.cpp
+index ab89d6a..efd1ed2 100644
+--- a/_3rdParty/LAMP_HMM/hmmFind.cpp
++++ b/_3rdParty/LAMP_HMM/hmmFind.cpp
+@@ -117,7 +117,7 @@ int main (int argc, char *argv[])
+     
+     if (readHMMFile){
+         hmmFile.open(hmmInputName);
+-        if(hmmFile==NULL){
++        if(!hmmFile){
+             cerr << "HMM file not found. Exiting..."<<endl;
+             exit(-1);
+         }
+@@ -218,7 +218,7 @@ int main (int argc, char *argv[])
+     
+             CObsSeq *obsSeq;
+             ifstream sequenceFile(sequenceName);
+-            assert(sequenceFile != NULL);
++            assert(sequenceFile);
+     //	obsSeq = learnedHMM->ReadSequences(sequenceFile);
+             obsSeq = new CObsSeq(obsType, sequenceFile);
+             sequenceFile.close();

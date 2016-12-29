@@ -1,3 +1,5 @@
 0001-hardwire-plugin-directory.patch
 0002-constexpr.patch
 0003-spelling.patch
+0004-erf.patch
+0005-null-tests.patch

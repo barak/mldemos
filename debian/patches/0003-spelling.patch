@@ -2,18 +2,68 @@ From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
 Date: Tue, 19 Jul 2016 14:55:03 +0200
 Subject: spelling
 
+
+occured -> occurred
+colum -> column
+Distrubution -> Distribution
 ---
+ Core/parser.cpp                                    |  2 +-
+ MLDemos/visualization.ui                           |  2 +-
+ _3rdParty/JnS/JnS.cpp                              |  2 +-
  _3rdParty/dlib/base64/base64_kernel_1.cpp          | 16 ++++++-------
  _3rdParty/dlib/bit_stream/bit_stream_kernel_1.cpp  |  2 +-
  .../entropy_encoder/entropy_encoder_kernel_1.cpp   | 12 +++++-----
  .../entropy_encoder/entropy_encoder_kernel_2.cpp   | 10 ++++----
+ _3rdParty/dlib/svm/rvm.h                           | 24 +++++++++----------
  _3rdParty/lwpr/lwpr.hh                             |  2 +-
  _3rdParty/lwpr/lwpr_binio.h                        | 28 +++++++++++-----------
  _3rdParty/lwpr/lwpr_xml.h                          |  2 +-
+ _3rdParty/matio/matio.h                            |  2 +-
  _3rdParty/nlopt/DIRect.c                           | 18 +++++++-------
  _AlgorithmsPlugins/GHSOM/GHSOM/neuronlayer.cpp     |  2 +-
- 9 files changed, 46 insertions(+), 46 deletions(-)
+ _IOPlugins/ImportTimeseries/parser.cpp             |  2 +-
+ _IOPlugins/WebImport/parser.cpp                    |  2 +-
+ 16 files changed, 64 insertions(+), 64 deletions(-)
 
+diff --git a/Core/parser.cpp b/Core/parser.cpp
+index 094e91b..85a32ca 100644
+--- a/Core/parser.cpp
++++ b/Core/parser.cpp
+@@ -327,7 +327,7 @@ void CSVParser::cleanData(unsigned int acceptedTypes)
+         if (!(dataTypes[i]&acceptedTypes) &&  // data type does not correspond to a requested one
+            (i != outputLabelColumn))       // output labels are stored separately, ignore
+         {
+-            cout << "Removing colum " << i << " of type " << dataTypes[i] <<  " ... ";
++            cout << "Removing column " << i << " of type " << dataTypes[i] <<  " ... ";
+             for(size_t j = 0; j < data.size(); j++)
+             {
+                 /* @note it seems that if we have --i instead of (i-1), the compiler produces bad code (SIGSEGV) */
+diff --git a/MLDemos/visualization.ui b/MLDemos/visualization.ui
+index bafb20f..2db5923 100644
+--- a/MLDemos/visualization.ui
++++ b/MLDemos/visualization.ui
+@@ -122,7 +122,7 @@
+            </item>
+            <item>
+             <property name="text">
+-             <string>Distrubution: Density</string>
++             <string>Distribution: Density</string>
+             </property>
+            </item>
+           </widget>
+diff --git a/_3rdParty/JnS/JnS.cpp b/_3rdParty/JnS/JnS.cpp
+index ab4af50..5cf925b 100644
+--- a/_3rdParty/JnS/JnS.cpp
++++ b/_3rdParty/JnS/JnS.cpp
+@@ -126,7 +126,7 @@ void Transform (double *X, double *Trans, int n, int T)
+       Xstart = t * n ;
+       Xstop  = Xstart + n ;
+ 
+-      /* stores in Tx the t-th colum of X transformed by Trans */
++      /* stores in Tx the t-th column of X transformed by Trans */
+       for (i=0; i<n ; i++) {
+ 	sum = 0.0 ;
+ 	for (s=i, Xind=Xstart; Xind<Xstop; s+=n, Xind++)
 diff --git a/_3rdParty/dlib/base64/base64_kernel_1.cpp b/_3rdParty/dlib/base64/base64_kernel_1.cpp
 index 06cae3d..5b48c78 100644
 --- a/_3rdParty/dlib/base64/base64_kernel_1.cpp
@@ -188,6 +238,118 @@ index d88030f..4f64a61 100644
          
      
  
+diff --git a/_3rdParty/dlib/svm/rvm.h b/_3rdParty/dlib/svm/rvm.h
+index 0acd475..f41ccd8 100644
+--- a/_3rdParty/dlib/svm/rvm.h
++++ b/_3rdParty/dlib/svm/rvm.h
+@@ -247,7 +247,7 @@ namespace dlib
+                     - alpha(active_bases(i)) == the alpha value associated with sample x(i)
+                     - weights(active_bases(i)) == the weight value associated with sample x(i)
+                     - colm(phi, active_bases(i)) == the column of phi associated with sample x(i)
+-                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_colum()) 
++                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_column()) 
+                 - else
+                     - the i'th sample isn't in the model and notionally has an alpha of infinity and
+                       a weight of 0.
+@@ -262,7 +262,7 @@ namespace dlib
+             // set the initial values of these guys
+             set_all_elements(active_bases, -1);
+             long first_basis = pick_initial_vector(x,t);
+-            get_kernel_colum(first_basis, x, K_col);
++            get_kernel_column(first_basis, x, K_col);
+             active_bases(first_basis) = 0;
+             set_colm(phi,0) = K_col;
+             alpha(0) = compute_initial_alpha(phi, t);
+@@ -384,7 +384,7 @@ namespace dlib
+                     if (active_bases(i) != -1)
+                         K_col = colm(phi,active_bases(i));
+                     else
+-                        get_kernel_colum(i, x, K_col);
++                        get_kernel_column(i, x, K_col);
+ 
+                     // tempv2 = trans(phi_m)*B
+                     tempv2 = scale_columns(trans(K_col), beta);  
+@@ -476,7 +476,7 @@ namespace dlib
+                         // update phi by adding the new sample's kernel matrix column in as one of phi's columns
+                         tempm.set_size(phi.nr(), phi.nc()+1);
+                         set_subm(tempm, get_rect(phi)) = phi;
+-                        get_kernel_colum(selected_idx, x, K_col);
++                        get_kernel_column(selected_idx, x, K_col);
+                         set_colm(tempm, phi.nc()) = K_col;
+                         tempm.swap(phi);
+ 
+@@ -523,7 +523,7 @@ namespace dlib
+             // find the row in the kernel matrix that has the biggest normalized projection onto the t vector
+             for (long r = 0; r < x.nr(); ++r)
+             {
+-                get_kernel_colum(r,x,K_col);
++                get_kernel_column(r,x,K_col);
+                 double temp = trans(K_col)*t;
+                 temp = temp*temp/length_squared(K_col);
+ 
+@@ -540,7 +540,7 @@ namespace dlib
+     // ------------------------------------------------------------------------------------
+ 
+         template <typename T>
+-        void get_kernel_colum (
++        void get_kernel_column (
+             long idx,
+             const T& x,
+             scalar_vector_type& col
+@@ -708,7 +708,7 @@ namespace dlib
+                     - alpha(active_bases(i)) == the alpha value associated with sample x(i)
+                     - weights(active_bases(i)) == the weight value associated with sample x(i)
+                     - colm(phi, active_bases(i)) == the column of phi associated with sample x(i)
+-                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_colum()) 
++                    - colm(phi, active_bases(i)) == kernel column i (from get_kernel_column()) 
+                 - else
+                     - the i'th sample isn't in the model and notionally has an alpha of infinity and
+                       a weight of 0.
+@@ -724,7 +724,7 @@ namespace dlib
+             // set the initial values of these guys
+             set_all_elements(active_bases, -1);
+             long first_basis = pick_initial_vector(x,t);
+-            get_kernel_colum(first_basis, x, K_col);
++            get_kernel_column(first_basis, x, K_col);
+             active_bases(first_basis) = 0;
+             set_colm(phi,0) = K_col;
+             alpha(0) = compute_initial_alpha(phi, t, var);
+@@ -793,7 +793,7 @@ namespace dlib
+                     if (active_bases(i) != -1)
+                         K_col = colm(phi,active_bases(i));
+                     else
+-                        get_kernel_colum(i, x, K_col);
++                        get_kernel_column(i, x, K_col);
+ 
+                     // tempv2 = trans(phi_m)*B
+                     tempv2 = trans(K_col)/var;  
+@@ -882,7 +882,7 @@ namespace dlib
+                         // update phi by adding the new sample's kernel matrix column in as one of phi's columns
+                         tempm.set_size(phi.nr(), phi.nc()+1);
+                         set_subm(tempm, get_rect(phi)) = phi;
+-                        get_kernel_colum(selected_idx, x, K_col);
++                        get_kernel_column(selected_idx, x, K_col);
+                         set_colm(tempm, phi.nc()) = K_col;
+                         tempm.swap(phi);
+ 
+@@ -916,7 +916,7 @@ namespace dlib
+     // ------------------------------------------------------------------------------------
+ 
+         template <typename T>
+-        void get_kernel_colum (
++        void get_kernel_column (
+             long idx,
+             const T& x,
+             scalar_vector_type& col
+@@ -958,7 +958,7 @@ namespace dlib
+             // find the row in the kernel matrix that has the biggest normalized projection onto the t vector
+             for (long r = 0; r < x.nr(); ++r)
+             {
+-                get_kernel_colum(r,x,K_col);
++                get_kernel_column(r,x,K_col);
+                 double temp = trans(K_col)*t;
+                 temp = temp*temp/length_squared(K_col);
+ 
 diff --git a/_3rdParty/lwpr/lwpr.hh b/_3rdParty/lwpr/lwpr.hh
 index dafb2f0..55d6f01 100644
 --- a/_3rdParty/lwpr/lwpr.hh
@@ -344,6 +506,19 @@ index 2cf1830..57972d8 100644
     \param[in] wishM        Number of desired rows, or 1 in case of scalars / vectors
     \param[in] wishN        Number of desired columns, or elements in case of vectors
  */
+diff --git a/_3rdParty/matio/matio.h b/_3rdParty/matio/matio.h
+index 8b9d76f..e20fb41 100644
+--- a/_3rdParty/matio/matio.h
++++ b/_3rdParty/matio/matio.h
+@@ -211,7 +211,7 @@ typedef struct mat_sparse_t {
+                                *  data[k].  0 <= k <= nzmax
+                                */
+     int nir;                 /**< number of elements in ir */
+-    int *jc;                 /**< Array size N+1 (N is number of columsn) with
++    int *jc;                 /**< Array size N+1 (N is number of columns) with
+                                *  jc[k] being the index into ir/data of the
+                                *  first non-zero element for row k.
+                                */
 diff --git a/_3rdParty/nlopt/DIRect.c b/_3rdParty/nlopt/DIRect.c
 index c84a0a7..f3ebc9d 100644
 --- a/_3rdParty/nlopt/DIRect.c
@@ -433,3 +608,29 @@ index 6fc71db..2ce5c7a 100644
      mapFile << "$TYPE rect\n";
      mapFile << "$XDIM " << x << "\n";
      mapFile << "$YDIM " << y << "\n";
+diff --git a/_IOPlugins/ImportTimeseries/parser.cpp b/_IOPlugins/ImportTimeseries/parser.cpp
+index 29c28da..e40eb66 100644
+--- a/_IOPlugins/ImportTimeseries/parser.cpp
++++ b/_IOPlugins/ImportTimeseries/parser.cpp
+@@ -181,7 +181,7 @@ void CSVParser::cleanData(unsigned int acceptedTypes)
+     for(size_t i = 0; i < inputTypes.size() - 1; i++)
+         if (!(inputTypes[i]&acceptedTypes)) // data type does not correspond to a requested one
+         {
+-            std::cout << "Removing colum " << i << " of type " << inputTypes[i] <<  " ... ";
++            std::cout << "Removing column " << i << " of type " << inputTypes[i] <<  " ... ";
+             for(size_t j = 0; j < data.size(); j++)
+             {
+                 it = data.at(j).begin() + i;
+diff --git a/_IOPlugins/WebImport/parser.cpp b/_IOPlugins/WebImport/parser.cpp
+index 417c58a..0f6c450 100644
+--- a/_IOPlugins/WebImport/parser.cpp
++++ b/_IOPlugins/WebImport/parser.cpp
+@@ -267,7 +267,7 @@ void CSVParser::cleanData(unsigned int acceptedTypes)
+         if (!(dataTypes[i]&acceptedTypes) &&  // data type does not correspond to a requested one
+            (i != outputLabelColumn))       // output labels are stored separately, ignore
+         {
+-            cout << "Removing colum " << i << " of type " << dataTypes[i] <<  " ... ";
++            cout << "Removing column " << i << " of type " << dataTypes[i] <<  " ... ";
+             for(size_t j = 0; j < data.size(); j++)
+             {
+                 /* @note it seems that if we have --i instead of (i-1), the compiler produces bad code (SIGSEGV) */

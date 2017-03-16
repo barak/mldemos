@@ -2,10 +2,10 @@ From: "Barak A. Pearlmutter" <barak+git@pearlmutter.net>
 Date: Tue, 19 Jul 2016 14:55:03 +0200
 Subject: spelling
 
-
 occured -> occurred
 colum -> column
 Distrubution -> Distribution
+carefull -> careful
 ---
  Core/parser.cpp                                    |  2 +-
  MLDemos/visualization.ui                           |  2 +-
@@ -20,10 +20,11 @@ Distrubution -> Distribution
  _3rdParty/lwpr/lwpr_xml.h                          |  2 +-
  _3rdParty/matio/matio.h                            |  2 +-
  _3rdParty/nlopt/DIRect.c                           | 18 +++++++-------
+ _AlgorithmsPlugins/DBSCAN/paramsDBSCAN.ui          |  2 +-
  _AlgorithmsPlugins/GHSOM/GHSOM/neuronlayer.cpp     |  2 +-
  _IOPlugins/ImportTimeseries/parser.cpp             |  2 +-
  _IOPlugins/WebImport/parser.cpp                    |  2 +-
- 16 files changed, 64 insertions(+), 64 deletions(-)
+ 17 files changed, 65 insertions(+), 65 deletions(-)
 
 diff --git a/Core/parser.cpp b/Core/parser.cpp
 index 094e91b..85a32ca 100644
@@ -595,6 +596,19 @@ index c84a0a7..f3ebc9d 100644
  		    *ierror = -5;
  		    goto cleanup;
  		}
+diff --git a/_AlgorithmsPlugins/DBSCAN/paramsDBSCAN.ui b/_AlgorithmsPlugins/DBSCAN/paramsDBSCAN.ui
+index 7e4bad4..d45e00b 100644
+--- a/_AlgorithmsPlugins/DBSCAN/paramsDBSCAN.ui
++++ b/_AlgorithmsPlugins/DBSCAN/paramsDBSCAN.ui
+@@ -49,7 +49,7 @@
+     </font>
+    </property>
+    <property name="toolTip">
+-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Metric used for the distance between points. Be carefull to also adapt the other parameters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
++    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Metric used for the distance between points. Be careful to also adapt the other parameters.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
 diff --git a/_AlgorithmsPlugins/GHSOM/GHSOM/neuronlayer.cpp b/_AlgorithmsPlugins/GHSOM/GHSOM/neuronlayer.cpp
 index 6fc71db..2ce5c7a 100644
 --- a/_AlgorithmsPlugins/GHSOM/GHSOM/neuronlayer.cpp

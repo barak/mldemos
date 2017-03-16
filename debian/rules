@@ -7,4 +7,4 @@ DPKG_EXPORT_BUILDFLAGS = 1
 include /usr/share/dpkg/buildflags.mk
 
 %:
-	dh $@ --buildsystem=qmake
+	dh $@ --buildsystem=qmake --no-parallel

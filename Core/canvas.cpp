@@ -838,7 +838,7 @@ void Canvas::DrawAxes(QPainter &painter)
             for(float y = (int)(bounding.y()/mult)*mult; y < bounding.y() + bounding.height(); y += mult) cnt++;
         }
         if(!cnt) mult = minGridWidth/(float)w;
-        if(w/cnt < minGridWidth) mult *= (float)minGridWidth*cnt/w;
+        if(cnt && w/cnt < minGridWidth) mult *= (float)minGridWidth*cnt/w;
         for(float y = (int)(bounding.y()/mult)*mult; y < bounding.y() + bounding.height(); y += mult)
         {
             float canvasY = toCanvasCoords(0,y).y();

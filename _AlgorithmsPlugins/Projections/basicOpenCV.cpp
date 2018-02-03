@@ -262,7 +262,7 @@ void BasicOpenCV::DisplayHueSatHist(IplImage* src)
     f32 max_value = 0;
 
     cvCvtColor( src, hsv, CV_BGR2HSV );
-    cvCvtPixToPlane( hsv, h_plane, s_plane, v_plane, 0 );
+    cvSplit( hsv, h_plane, s_plane, v_plane, 0 );
     hist = cvCreateHist( 2, hist_size, CV_HIST_ARRAY, ranges, 1 );
     cvCalcHist( planes, hist, 0, 0 );
     cvGetMinMaxHistValue( hist, 0, &max_value, 0, 0 );
@@ -270,7 +270,7 @@ void BasicOpenCV::DisplayHueSatHist(IplImage* src)
 
     FOR(h, h_bins){
         FOR(s, s_bins){
-            f32 bin_val = cvQueryHistValue_2D( hist, h, s );
+            f32 bin_val = cvGetReal2D( hist, h, s );
             s32 intensity = cvRound(bin_val*255/max_value);
             cvRectangle( hist_img, cvPoint( h*scale, s*scale ),
                          cvPoint( (h+1)*scale - 1, (s+1)*scale - 1),

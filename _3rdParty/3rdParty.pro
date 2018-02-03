@@ -3,7 +3,7 @@
 ###########################
 TEMPLATE = lib
 NAME = 3rdParty
-MLPATH = ..
+MLPATH = $$OUT_PWD/..
 CONFIG += mainApp static _3rdParty
 
 include($$MLPATH/MLDemos_variables.pri)

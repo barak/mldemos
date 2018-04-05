@@ -6,6 +6,10 @@ It was downloaded from:
 
     git clone git://gitorious.org/mldemos/mldemos.git
 
+    Upstream maintenance has stalled, and gitoriouis is no more, so
+    for development such as it is see github.com/barak/mldemos and
+    forks thereof.
+
 Upstream Authors:
 
     Basilio Noris <mldemos@b4silio.com>

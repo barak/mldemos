@@ -1,16 +1,18 @@
+# Generated Executables
+/mldemos
+
 # MLDemos noise
 last-data.txt
 *.psd
 *.sln
 *.zip
 website
+/UnitTesting/UnitTesting
 
 # build/debug output
 */ValgrindOut.xml
 pluginsDebug/*
 plugins/*
-/mldemos
-/UnitTesting/UnitTesting
 
 # osx noise
 .DS_Store
@@ -23,7 +25,8 @@ Makefile*
 *.pro.user*
 *.app
 *.dylib
-.qmake.cache
+/.qmake.cache
+/.qmake.stash
 
 # codeblocks noise
 *.layout

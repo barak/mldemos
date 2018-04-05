@@ -126,7 +126,7 @@ void Transform (double *X, double *Trans, int n, int T)
       Xstart = t * n ;
       Xstop  = Xstart + n ;
 
-      /* stores in Tx the t-th colum of X transformed by Trans */
+      /* stores in Tx the t-th column of X transformed by Trans */
       for (i=0; i<n ; i++) {
 	sum = 0.0 ;
 	for (s=i, Xind=Xstart; Xind<Xstop; s+=n, Xind++)

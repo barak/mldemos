@@ -9,19 +9,20 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 
 TEMPLATE = subdirs
 # the main software
-CONFIG += ordered
+CONFIG += ordered c++11
 
 # Core components
 SUBDIRS = Core 3rdParty MLDemos UnitTesting
 #SUBDIRS += MLScripting
 
 # Algorithm plugins
-SUBDIRS += Obstacle GMM Kernel GP KNN Projections LWPR Maximizers Reinforcements OpenCV SEDS FLAME DBSCAN Lowess CCA ASVM GHSOM RandomKernel MetricLearning Projections
+SUBDIRS += Obstacle GMM Kernel GP KNN Projections LWPR Maximizers Reinforcements SEDS FLAME DBSCAN Lowess CCA ASVM GHSOM RandomKernel MetricLearning
+# OpenCV
 #SUBDIRS += MLR QTMeans # Experimental
 #SUBDIRS += Example
 
 # Input plugins
-SUBDIRS += PCAFaces
+#SUBDIRS += PCAFaces
 #SUBDIRS += ImportTimeseries CSVImport RandomEmitter WebImport
 
 
@@ -56,7 +57,7 @@ CCA.file = $$ALGOPATH/CCA/pluginCCA.pro
 GHSOM.file = $$ALGOPATH/GHSOM/pluginGHSOM.pro
 RandomKernel.file = $$ALGOPATH/RandomKernel/pluginRandomKernel.pro
 MetricLearning.file = $$ALGOPATH/MetricLearning/pluginMetricLearning.pro
-OpenCV.file = $$ALGOPATH/OpenCV/pluginOpenCV.pro
+#OpenCV.file = $$ALGOPATH/OpenCV/pluginOpenCV.pro
 MLR.file = $$ALGOPATH/MLR/pluginMLR.pro
 QTMeans.file = $$ALGOPATH/QTMeans/pluginQTMeans.pro
 
@@ -65,7 +66,7 @@ Example.file = $$ALGOPATH/Example/pluginExample.pro
 
 # Input plugins project files
 INPUTPATH = _IOPlugins
-PCAFaces.file = $$INPUTPATH/PCAFaces/pluginPCAFaces.pro
+#PCAFaces.file = $$INPUTPATH/PCAFaces/pluginPCAFaces.pro
 RandomEmitter.file = $$INPUTPATH/RandomEmitter/pluginRandomEmitter.pro
 WebImport.file = $$INPUTPATH/WebImport/pluginWebImport.pro
 CSVImport.file = $$INPUTPATH/CSVImport/pluginCSVImport.pro

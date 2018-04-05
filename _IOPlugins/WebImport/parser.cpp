@@ -267,7 +267,7 @@ void CSVParser::cleanData(unsigned int acceptedTypes)
         if (!(dataTypes[i]&acceptedTypes) &&  // data type does not correspond to a requested one
            (i != outputLabelColumn))       // output labels are stored separately, ignore
         {
-            cout << "Removing colum " << i << " of type " << dataTypes[i] <<  " ... ";
+            cout << "Removing column " << i << " of type " << dataTypes[i] <<  " ... ";
             for(size_t j = 0; j < data.size(); j++)
             {
                 /* @note it seems that if we have --i instead of (i-1), the compiler produces bad code (SIGSEGV) */

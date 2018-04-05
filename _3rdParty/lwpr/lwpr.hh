@@ -56,7 +56,7 @@ class LWPR_Exception {
       BAD_OUTPUT_DIM,   /**< \brief Thrown when an argument should have matched the output dimension of the LWPR model, but did not */
       BAD_INIT_D,       /**< \brief Thrown when the desired initial distance metric is not positive definite */
       UNKNOWN_KERNEL,   /**< \brief Thrown when the name of an unknown kernel function has been passed */
-      IO_ERROR,         /**< \brief Thrown when errors occured during reading from or writing to files */
+      IO_ERROR,         /**< \brief Thrown when errors occurred during reading from or writing to files */
       OUT_OF_RANGE,     /**< \brief Thrown when an out-of-range index was passed */
       UNSPECIFIED_ERROR /**< \brief Thrown in any other error case (should not happen) */
    } Code;

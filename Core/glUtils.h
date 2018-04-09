@@ -42,6 +42,12 @@
 #endif
 
 
+#ifdef QT_OPENGL_ES_2
+// OpenGL ES does not have glColor3f, instead...
+#define glColor3f(a,b,c) glColor4f((a),(b),(c),1.0f)
+#endif
+
+
 struct GLObject
 {
     QVector<QVector3D> vertices;

@@ -684,17 +684,12 @@ void GLWidget::DrawLines(const GLObject &o) const
     glPushMatrix();
 
 #include <qglobal.h>
-    // qreal might be a float, need to account for that here.
-    // No choice but to use the logic in Qt/qglobal.h
-#if defined(QT_COORD_TYPE)
+
     // typedef QT_COORD_TYPE qreal;
-    // (which we'll just assume is a double)
-    glMultMatrixd(o.model.constData());
-#elif defined(QT_NO_FPU) || defined(QT_ARCH_ARM) || defined(QT_ARCH_WINDOWSCE) || defined(QT_ARCH_SYMBIAN)
-    // typedef float qreal;
+    // qreal might be a float or a double, need to account for that here.
+#if sizeof(qreal) == size(float)
     glMultMatrixf(o.model.constData());
 #else
-    // typedef double qreal;
     glMultMatrixd(o.model.constData());
 #endif
 

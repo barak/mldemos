@@ -1,3 +1,10 @@
+mldemos (0.5.1+git.1.ee5d11f-3) unstable; urgency=medium
+
+  * fix for OpenGL ES platforms---I'm looking at you ARM---which doesnt'
+    support glColor3f (closes: #857970)
+
+ -- Barak A. Pearlmutter <bap@debian.org>  Mon, 09 Apr 2018 17:55:38 +0100
+
 mldemos (0.5.1+git.1.ee5d11f-2) unstable; urgency=medium
 
   * bump to dh11
@@ -6,7 +13,6 @@ mldemos (0.5.1+git.1.ee5d11f-2) unstable; urgency=medium
   * swizzle packaging repo to salsa
   * merge build fix 337d1d0c78055d98dcc92266a64a038da5779f67
     by Martin T. H. Sandsmark <martin.sandsmark@kde.org> (closes: #861270)
-  * surely arm is updated to have glColor3f by now (closes: #857970)
 
  -- Barak A. Pearlmutter <bap@debian.org>  Thu, 05 Apr 2018 16:11:18 +0100
 

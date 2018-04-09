@@ -628,6 +628,32 @@ void GLWidget::DrawSamples(const GLObject &o) const
     program->release();
 }
 
+
+#include <qglobal.h>
+
+// typedef QT_COORD_TYPE qreal;
+
+// NOTE: qreal might be a float or a double, need to account for that
+// in the call below to glMultMatrixf vs glMultMatrixd.
+
+// This would be one possibility, but the untaken branch would anger the compiler:
+
+//    if (sizeof(qreal) == sizeof(float))
+//      glMultMatrix(o.model.constData());
+//    else
+//      glMultMatrixd(o.model.constData());
+
+// Instead, we make an overloaded procedure which dispatches correctly.
+inline void glMultMatrix(const GLfloat  *m) 
+{
+  glMultMatrixf(m);
+}
+
+inline void glMultMatrix(const GLdouble *m) 
+{
+  glMultMatrixd(m);
+}
+
 void GLWidget::DrawLines(const GLObject &o) const
 {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -683,15 +709,7 @@ void GLWidget::DrawLines(const GLObject &o) const
 
     glPushMatrix();
 
-#include <qglobal.h>
-
-    // typedef QT_COORD_TYPE qreal;
-    // qreal might be a float or a double, need to account for that here.
-#if sizeof(qreal) == size(float)
-    glMultMatrixf(o.model.constData());
-#else
-    glMultMatrixd(o.model.constData());
-#endif
+    glMultMatrix(o.model.constData());
 
     if(o.objectType.contains("linestrip") || o.objectType.contains("trajectories")) glBegin(GL_LINE_STRIP);
     else glBegin(GL_LINES);
